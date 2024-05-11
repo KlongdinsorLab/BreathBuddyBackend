@@ -1,0 +1,1 @@
+https://docs.deno.com/deploy/tutorials/tutorial-firebase#firebase-auth

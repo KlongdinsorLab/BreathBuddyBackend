@@ -1,0 +1,146 @@
+Player
+C - Only by admin
+R - Only by admin, doctor
+U - Only by admin
+D - None
+
+Game session
+C - Only by that user
+R - Every one
+  - Only player_id, score, end date
+U - Only by that user
+  - Only update score, end date, status
+D - None
+
+Coditioon
+C - Only by admin, doctor
+R - Only by admin, doctor
+U - Only by admin, doctor
+D - None
+
+Device
+C - None
+R - Only by admin
+U - None
+D - Only by admin
+
+// https://github.com/orgs/supabase/discussions/1275
+// https://github.com/orgs/supabase/discussions/656
+
+// https://supabase.com/docs/guides/database/functions
+
+// https://supabase.com/docs/guides/cli/managing-environments
+
+// https://github.com/supabase/supabase-action-example
+
+// https://github.com/orgs/supabase/discussions/11799
+
+// https://dba.stackexchange.com/questions/325337/how-to-configure-postgresql-security-settings-to-allow-select-of-different-colum
+
+// https://www.postgresql.org/docs/current/plpython-database.html
+
+// https://stackoverflow.com/questions/3281706/postgresql-disallow-the-update-of-a-column-how/3281750#3281750
+
+// https://dba.stackexchange.com/questions/307097/postgresql-policy-to-prevent-a-field-from-being-updated
+
+-- 1. Split your table into two and add the policy to the extra table that has the secured columns.
+-- 2. Only GRANT UPDATE to a subset of columns of the table(GRANT UPDATE(col1, col2)..).
+-- 3. Hide the column behind a VIEW. Don't expose the table to clients and only expose a VIEW with a subset of the columns. The VIEW will be auto-updatable, so you can UPDATE directly.
+-- 4. Hide the table behind a FUNCTION with SECURITY DEFINER. The table doesn't have GRANT UPDATE for clients and they can only UPDATE the table through the FUNCTION.
+
+create policy "User can end game and save score"
+on game_session
+for create
+using (
+  exists (
+    select 1 from token
+    where token.player_id = game_session.player_id
+  )
+);
+
+create policy "User can end game and save score"
+on game_session
+for update
+using (
+  exists (
+    select 1 from token
+    where token.player_id = game_session.player_id and game_session.end_at is null
+  )
+);
+
+-- START GAME
+CREATE FUNCTION start_game(token string) RETURNS text AS $$
+    try:
+        plpy.prepare('INSERT INTO game_session (player_id, status) VALUES("SELECT player_id from device where $1 = device.token", "STARTED")');
+        plpy.execute(plan, [token, _status])
+    except plpy.SPIError as e:
+        return "Game session not created: %s" % e.sqlstate
+$$ LANGUAGE plpython3u
+   SECURITY DEFINER;
+
+--- Not use
+CREATE FUNCTION create_game_session(token string, _status game_session_status) RETURNS text AS $$
+    try:
+        _player_id = plpy.prepare("SELECT player_id from game_token where $1 = game_token.token limit=1", ["uuid"])
+        plan = plpy.prepare("INSERT INTO game_session (player_id, status) VALUES ($1, $2)", ["uuid", "game_session_status"])
+        plpy.execute(plan, [_player_id, _status])
+    except plpy.SPIError as e:
+        return "Error: %s" % e.sqlstate
+    else:
+        return plpy.execute("SELECT 1 from game_session order by created_at")
+$$ LANGUAGE plpython3u
+   SECURITY DEFINER;
+-- 
+
+CREATE FUNCTION end_game(token string, _game_id uuid) RETURNS text AS $$
+    try:
+        plan = plpy.prepare("INSERT INTO game_session (player_id, reload_count, status) VALUES ($1, $2, $3)", ["uuid", "int", "game_session_status"])
+        plpy.execute(plan, [_player_id, _reload_count, _status])
+    except plpy.SPIError as e:
+        return "Error: %s" % e.sqlstate
+    else:
+        return "Game Session created"
+$$ LANGUAGE plpython3u
+   SECURITY DEFINER;
+-- 
+
+-- Trigger End game if there's any running
+
+-- LANGUAGE plpgsql VOLATILE COST 100 SECURITY DEFINER;
+
+
+-- 1 player multiple devices
+-- Add timer
+
+
+CREATE FUNCTION start_game(p_token text) RETURNS void AS $$
+    DECLARE
+      selected_player_id uuid;
+    BEGIN
+      SELECT player_id 
+      into selected_player_id
+      FROM device
+      WHERE token = p_token;
+    
+      INSERT INTO game_session (player_id, status) 
+      VALUES(selected_player_id, "STARTED");
+    END;
+$$ LANGUAGE plpgsql
+   SECURITY DEFINER;
+
+
+CREATE FUNCTION end_game(p_token text, p_reload_count int) RETURNS void AS $$
+    DECLARE
+      selected_player_id uuid;
+    BEGIN
+      SELECT player_id 
+      into selected_player_id
+      FROM device
+      WHERE token = p_token;
+    
+      UPDATE game_session 
+      SET reload_count = p_reload_count, status = "ENDED"
+      WHERE player_id = selected_player_id;
+    END;
+$$ LANGUAGE plpgsql
+   SECURITY DEFINER;

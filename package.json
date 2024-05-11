@@ -1,0 +1,14 @@
+{
+  "name": "plakod-admin",
+  "version": "0.0.1",
+  "scripts": {
+    "test": "node --test"
+  },
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.4"
+  },
+  "devDependencies": {
+    "supabase": "^1.110.1"
+  }
+}
