@@ -2,4 +2,4 @@
 .env
 .temp/*
 .branches/*
-.node_modules/*
+node_modules/*
