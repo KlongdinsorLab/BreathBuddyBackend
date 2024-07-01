@@ -44,6 +44,8 @@ installGlobals();
 export async function verify(idToken: string) {
     const FIREBASE_PROJECT_ID = Deno.env.get('FIREBASE_PROJECT_ID');
     console.log(FIREBASE_PROJECT_ID)
+
+    //..
     
     
 
