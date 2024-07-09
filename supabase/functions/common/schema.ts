@@ -28,11 +28,11 @@ export const usersTable = pgTable('users_table', {
 //     create_at: timestamp('create_at').notNull().defaultNow()
 // })
 
-// export const levelsTable = pgTable('levels_table', {
-//     id: serial('id').primaryKey(),
-//     level: integer('level').notNull().unique(),
-//     score_require: integer('score_require').notNull()
-// })
+export const levelsTable = pgTable('levels_table', {
+    id: serial('id').primaryKey(),
+    level: integer('level').notNull().unique(),
+    score_require: integer('score_require').notNull()
+})
 
 // export const difficultiesTable = pgTable('difficulties_table', {
 //     id: serial('id').primaryKey(),
