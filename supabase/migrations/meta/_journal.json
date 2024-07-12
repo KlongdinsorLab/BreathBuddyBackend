@@ -15,6 +15,13 @@
       "when": 1720411545168,
       "tag": "0001_married_wither",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1720515884423,
+      "tag": "0002_shiny_clea",
+      "breakpoints": true
     }
   ]
 }

@@ -7,18 +7,19 @@ export const usersTable = pgTable('users_table', {
   email: text('email').notNull().unique(),
 });
 
-// export const playersTable = pgTable('players_table', {
-//     id: serial('id').primaryKey(),
-//     tel: text('tel').notNull().unique(),
-//     difficulty_id: integer('difficulty_id').notNull()
-//         .references(() => difficultiesTable.id, { onDelete: 'cascade' }),
-//     username: text('username'),
-//     gender: text('gender', {enum: ["Male", "Female"] }),
-//     birth_year: integer('birth_year'),
-//     airflow: integer('airflow'),
-//     last_played_at: timestamp('last_played_at'),
-//     // TODO characterID
-// })
+export const playersTable = pgTable('players_table', {
+    id: serial('id').primaryKey(),
+    tel: text('tel').notNull().unique(),
+    // difficulty_id: integer('difficulty_id').notNull()
+    //     .references(() => difficultiesTable.id, { onDelete: 'cascade' }),
+    username: text('username'),
+    gender: text('gender', {enum: ["Male", "Female"] }),
+    birth_year: integer('birth_year'),
+    airflow: integer('airflow'),
+    last_played_at: timestamp('last_played_at'),
+    // using_character_id: integer('using_character_id').notNull()
+    //   .references(() => charactersTable.id, { onDelete: 'cascade' })
+})
 
 // export const vasTable = pgTable('vas_table', {
 //     id: serial('id').primaryKey(),
