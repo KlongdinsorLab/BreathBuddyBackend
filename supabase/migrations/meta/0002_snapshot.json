@@ -1,6 +1,6 @@
 {
-  "id": "aa4476f7-b57b-4709-92f1-5e54cf56306a",
-  "prevId": "c8bdbd23-822e-40e1-b0c0-01b610bbcfc2",
+  "id": "fc281918-dfa1-48cd-929f-6dbaf25445c9",
+  "prevId": "aa4476f7-b57b-4709-92f1-5e54cf56306a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -180,7 +180,15 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {
+        "difficulties_table_name_unique": {
+          "name": "difficulties_table_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      }
     },
     "public.game_sessions_table": {
       "name": "game_sessions_table",
@@ -546,7 +554,7 @@
           "name": "firebase_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "phone_number": {
           "name": "phone_number",
@@ -556,6 +564,13 @@
         },
         "difficulty_id": {
           "name": "difficulty_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "using_character_id": {
+          "name": "using_character_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -589,12 +604,6 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
-        },
-        "using_character_id": {
-          "name": "using_character_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
         }
       },
       "indexes": {},
