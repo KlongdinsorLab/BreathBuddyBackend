@@ -23,7 +23,6 @@ async function getCurrentDifficulty(firebaseId : string) {
     .then(takeUniqueOrThrow)
 
   const response = {
-    status : 200,
     message : "Ok",
     response : result
   }

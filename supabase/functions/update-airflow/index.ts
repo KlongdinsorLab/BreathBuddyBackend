@@ -25,7 +25,6 @@ async function updateAirflow(firebaseId : string, airflow : number) {
     .then(takeUniqueOrThrow)
 
   const response = {
-    status : 200,
     message : "Ok",
     response : result
   }

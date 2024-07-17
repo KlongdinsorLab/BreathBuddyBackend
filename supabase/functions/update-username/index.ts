@@ -24,7 +24,6 @@ async function updateUsername(firebaseId : string, username : string){
     .then(takeUniqueOrThrow)
 
   const response = {
-    status : 200,
     message : "Ok",
     response : result
   }

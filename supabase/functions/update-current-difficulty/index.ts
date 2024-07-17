@@ -21,7 +21,6 @@ async function updateCurrentDifficulty(firebaseId : string, difficultyId : numbe
     .then(takeUniqueOrThrow)
 
   const response = {
-    status : 200,
     message : "Ok",
     response : result
   }

@@ -25,7 +25,6 @@ async function getUnlockedCharacters (firebaseId : string) {
     .where(eq(playersTable.firebase_id, firebaseId))
 
   const response = {
-    status : 200,
     message : "Ok",
     response : result
   }

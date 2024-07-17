@@ -32,7 +32,6 @@ async function updateUsingCharacter(firebaseId : string, characterId : number) {
     .then(takeUniqueOrThrow)
 
   const response = {
-    status : 200,
     message : "Ok",
     response : result
   }

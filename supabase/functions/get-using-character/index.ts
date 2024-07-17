@@ -29,7 +29,6 @@ async function getUsingCharacter(firebaseId : string) {
     .then(takeUniqueOrThrow)
 
   const response = {
-    status : 200,
     message : "Ok",
     response : result
   }
