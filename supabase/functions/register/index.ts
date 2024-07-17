@@ -7,7 +7,7 @@ import "https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"
 import { db } from "../common/db.ts";
 import { charactersTable, difficultiesTable, playersCharactersTable, playersTable } from "../common/schema.ts";
 import { eq } from "npm:drizzle-orm@^0.31.2/expressions";
-import { getFirebaseId } from "../authFunctions.ts";
+import { getFirebaseId } from "../_shared/authFunctions.ts";
 
 console.log("Hello from Functions!")
 

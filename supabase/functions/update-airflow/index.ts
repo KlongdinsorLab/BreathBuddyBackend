@@ -7,39 +7,56 @@ import "https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"
 import { db } from "../common/db.ts";
 import { playersTable } from "../common/schema.ts";
 import { eq } from "npm:drizzle-orm@^0.31.2/expressions";
-import { getFirebaseId } from "../authFunctions.ts";
+import { getFirebaseId } from "../_shared/authFunctions.ts";
+import { takeUniqueOrThrow } from "../_shared/takeUniqueOrThrow.ts";
 
 console.log("Hello from Functions!")
 
-Deno.serve(async (req) => {
-  const { airflow } = await req.json()
+async function updateAirflow(firebaseId : string, airflow : number) {
 
   if(airflow < 100 || airflow > 600 || airflow%100 !== 0) {
-    // TODO Error Status
-    const response = {message: "Invalid Airflow"}
+    throw new Error("Invalid Airflow Input")
+  }
+
+  const result = await db.update(playersTable)
+    .set( {airflow : airflow} )
+    .where(eq(playersTable.firebase_id,firebaseId))
+    .returning({airflow : playersTable.airflow})
+    .then(takeUniqueOrThrow)
+
+  const response = {
+    status : 200,
+    message : "Ok",
+    response : result
+  }
+
+  return response
+}
+
+Deno.serve(async (req) => {
+  try{
+    const { airflow } = await req.json()
+    const authHeader = req.headers.get("Authorization")!
+    const firebaseId = getFirebaseId(authHeader)
+
+    const response = await updateAirflow(firebaseId,airflow)
+
     return new Response(
       JSON.stringify(response),
       { headers: { "Content-Type": "application/json" } },
     )
   }
-
-  const authHeader = req.headers.get("Authorization")!
-  const firebaseId = getFirebaseId(authHeader)
-
-  await db.update(playersTable).set( {airflow : airflow} ).where(eq(playersTable.firebase_id,firebaseId))
-  
-  const result = (await db.select().from(playersTable).where(eq(playersTable.firebase_id,firebaseId)))[0]
-
-  const response = {
-    status : 200,
-    message : "Ok",
-    result : result
+  catch(error){
+    const response = {
+      status : error.status,
+      message : error.message,
+    }
+    return new Response(
+      JSON.stringify(response),
+      { headers: { "Content-Type": "application/json" } },
+    )
   }
-
-  return new Response(
-    JSON.stringify(response),
-    { headers: { "Content-Type": "application/json" } },
-  )
+  
 })
 
 /* To invoke locally:

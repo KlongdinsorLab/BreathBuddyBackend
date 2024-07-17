@@ -4,30 +4,56 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"
-import { getFirebaseId } from "../authFunctions.ts";
+import { getFirebaseId } from "../_shared/authFunctions.ts";
+import { takeUniqueOrThrow } from "../_shared/takeUniqueOrThrow.ts";
 import { db } from "../common/db.ts";
 import { difficultiesTable, playersTable } from "../common/schema.ts";
 import { eq } from "npm:drizzle-orm@^0.31.2/expressions";
 
 console.log("Hello from Functions!")
 
-Deno.serve(async (req) => {
-  const firebaseId = getFirebaseId(req.headers.get('Authorization')!)
-  const { difficultyId } = (await db.select({ difficultyId : playersTable.difficulty_id })
-    .from(playersTable).where(eq(playersTable.firebase_id,firebaseId)).limit(1))[0]
-
-  const result = (await db.select().from(difficultiesTable).where(eq(difficultiesTable.id,difficultyId)))[0]
+async function getCurrentDifficulty(firebaseId : string) {
+  const result = await db.select({
+      id : difficultiesTable.id,
+      name : difficultiesTable.name,
+      inhale_second : difficultiesTable.inhale_second
+    }).from(difficultiesTable)
+    .innerJoin(playersTable, eq(difficultiesTable.id, playersTable.difficulty_id))
+    .where(eq(playersTable.firebase_id, firebaseId))
+    .then(takeUniqueOrThrow)
 
   const response = {
     status : 200,
     message : "Ok",
-    result : result
+    response : result
   }
 
-  return new Response(
-    JSON.stringify(response),
-    { headers: { "Content-Type": "application/json" } },
-  )
+  return response
+}
+
+Deno.serve(async (req) => {
+  try{
+    const firebaseId = getFirebaseId(req.headers.get('Authorization')!)
+    const response = await getCurrentDifficulty(firebaseId)
+
+    return new Response(
+      JSON.stringify(response),
+      { headers: { "Content-Type": "application/json" } },
+    )
+  }
+  catch(error){
+    const response = {
+      status : error.status,
+      message : error.message,
+    }
+    return new Response(
+      JSON.stringify(response),
+      { headers: { "Content-Type": "application/json" } },
+    )
+  }
+  
+
+  
 })
 
 /* To invoke locally:

@@ -4,27 +4,50 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"
-import { getFirebaseId } from "../authFunctions.ts";
+import { getFirebaseId } from "../_shared/authFunctions.ts";
+import { takeUniqueOrThrow } from "../_shared/takeUniqueOrThrow.ts";
 import { playersTable } from "../common/schema.ts";
 import { db } from "../common/db.ts";
 import { eq } from "npm:drizzle-orm@^0.31.2/expressions";
 
 console.log("Hello from Functions!")
 
-Deno.serve(async (req) => {
-  const firebaseId = getFirebaseId(req.headers.get('Authorization')!)
-  const result = (await db.select({username : playersTable.username}).from(playersTable).where(eq(playersTable.firebase_id,firebaseId)))[0]
+async function getUsername(firebaseId : string) {
+  const result = await db.select({
+      username : playersTable.username
+    }).from(playersTable)
+    .where(eq(playersTable.firebase_id,firebaseId))
+    .then(takeUniqueOrThrow)
 
   const response = {
     status : 200,
     message : "Ok",
-    result : result
+    response : result
   }
   
-  return new Response(
-    JSON.stringify(response),
-    { headers: { "Content-Type": "application/json" } },
-  )
+  return response
+}
+
+Deno.serve(async (req) => {
+  try{
+    const firebaseId = getFirebaseId(req.headers.get('Authorization')!)
+    const response = await getUsername(firebaseId)
+    return new Response(
+      JSON.stringify(response),
+      { headers: { "Content-Type": "application/json" } },
+    )
+  }
+  catch(error){
+    const response = {
+      status : error.status,
+      message : error.message,
+    }
+    return new Response(
+      JSON.stringify(response),
+      { headers: { "Content-Type": "application/json" } },
+    )
+  }
+  
 })
 
 /* To invoke locally:

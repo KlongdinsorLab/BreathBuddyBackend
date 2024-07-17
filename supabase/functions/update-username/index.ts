@@ -4,47 +4,54 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"
-import { getFirebaseId } from "../authFunctions.ts";
+import { getFirebaseId } from "../_shared/authFunctions.ts";
+import { takeUniqueOrThrow } from "../_shared/takeUniqueOrThrow.ts";
 import { db } from "../common/db.ts";
 import { playersTable } from "../common/schema.ts";
 import { eq } from "npm:drizzle-orm@^0.31.2/expressions";
 
 console.log("Hello from Functions!")
 
+async function updateUsername(firebaseId : string, username : string){
+  if(username.length > 20) {
+    throw new Error("Invalid Username")
+  }
+
+  const result = await db.update(playersTable)
+    .set({username : username})
+    .where(eq(playersTable.firebase_id,firebaseId))
+    .returning({username : playersTable.username})
+    .then(takeUniqueOrThrow)
+
+  const response = {
+    status : 200,
+    message : "Ok",
+    response : result
+  }
+
+  return response
+}
+
 Deno.serve(async (req) => {
   try{
     const { username } = await req.json()
-
-    if(username.length > 20) {
-      // TODO Error Status
-      const response = {message: "Invalid username"}
-      return new Response(
-        JSON.stringify(response),
-        { headers: { "Content-Type": "application/json" } },
-      )
-    }
-
     const authHeader = req.headers.get("Authorization")!
     const firebaseId = getFirebaseId(authHeader)
 
-    await db.update(playersTable).set( {username : username} ).where(eq(playersTable.firebase_id,firebaseId))
-  
-    const result = (await db.select().from(playersTable).where(eq(playersTable.firebase_id,firebaseId)))[0]
-
-    const response = {
-      status : 200,
-      message : "Ok",
-      result : result
-    }
+    const response = await updateUsername(firebaseId,username)
 
     return new Response(
       JSON.stringify(response),
       { headers: { "Content-Type": "application/json" } },
     )
   }
-  catch(e){
+  catch(error){
+    const response = {
+      status : error.status,
+      message : error.message,
+    }
     return new Response(
-      JSON.stringify({ status : e.status, message : e.message}),
+      JSON.stringify(response),
       { headers: { "Content-Type": "application/json" } },
     )
   }

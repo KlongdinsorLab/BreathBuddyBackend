@@ -5,32 +5,53 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"
 import { db } from "../common/db.ts";
-import { getFirebaseId } from "../authFunctions.ts";
-import { difficultiesTable, playersTable } from "../common/schema.ts";
+import { getFirebaseId } from "../_shared/authFunctions.ts";
+import { takeUniqueOrThrow } from "../_shared/takeUniqueOrThrow.ts";
+import { playersTable } from "../common/schema.ts";
 import { eq } from "npm:drizzle-orm@^0.31.2/expressions";
 
 console.log("Hello from Functions!")
 
-Deno.serve(async (req) => {
-  const { difficultyId } = await req.json()
-  const firebaseId = getFirebaseId(req.headers.get('Authorization')!)
-  await db.update(playersTable).set({difficulty_id : difficultyId}).where(eq(playersTable.firebase_id,firebaseId))
+async function updateCurrentDifficulty(firebaseId : string, difficultyId : number) {
 
-
-  const player = ( await db.select().from(playersTable).where(eq(playersTable.firebase_id,firebaseId)) )[0]
-  const difficulty = ( await db.select().from(difficultiesTable).where(eq(difficultiesTable.id,difficultyId)) )[0]
-  const result = { player, difficulty}
+  const result = await db.update(playersTable)
+    .set({difficulty_id : difficultyId})
+    .where(eq(playersTable.firebase_id,firebaseId))
+    .returning({difficulty_id : playersTable.difficulty_id})
+    .then(takeUniqueOrThrow)
 
   const response = {
     status : 200,
     message : "Ok",
-    result : result
+    response : result
   }
 
-  return new Response(
-    JSON.stringify(response),
-    { headers: { "Content-Type": "application/json" } },
-  )
+  return response
+}
+
+Deno.serve(async (req) => {
+  try{
+    const { difficultyId } = await req.json()
+    const firebaseId = getFirebaseId(req.headers.get('Authorization')!)
+
+    const response = await updateCurrentDifficulty(firebaseId, difficultyId)
+
+    return new Response(
+      JSON.stringify(response),
+      { headers: { "Content-Type": "application/json" } },
+    )
+  }
+  catch(error){
+    const response = {
+      status : error.status,
+      message : error.message,
+    }
+    return new Response(
+      JSON.stringify(response),
+      { headers: { "Content-Type": "application/json" } },
+    )
+  }
+  
 })
 
 /* To invoke locally:

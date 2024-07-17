@@ -4,30 +4,60 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"
-import { getFirebaseId } from "../authFunctions.ts";
+import { getFirebaseId } from "../_shared/authFunctions.ts";
+import { takeUniqueOrThrow } from "../_shared/takeUniqueOrThrow.ts";
 import { charactersTable, playersTable } from "../common/schema.ts";
 import { db } from "../common/db.ts";
 import { eq } from "npm:drizzle-orm@^0.31.2/expressions";
 
 console.log("Hello from Functions!")
 
-Deno.serve(async (req) => {
-  const firebaseId = getFirebaseId(req.headers.get('Authorization')!)
-  const { characterId } = (await db.select({ characterId : playersTable.difficulty_id })
-    .from(playersTable).where(eq(playersTable.firebase_id,firebaseId)).limit(1))[0]
+async function getUsingCharacter(firebaseId : string) {
+  // const { characterId } = (await db.select({ characterId : playersTable.difficulty_id })
+  //   .from(playersTable).where(eq(playersTable.firebase_id,firebaseId)).limit(1))[0]
 
-  const result = (await db.select().from(charactersTable).where(eq(charactersTable.id,characterId)))[0]
+  // const result = (await db.select().from(charactersTable).where(eq(charactersTable.id,characterId)))[0]
+
+  const result = await db.select({
+      id : charactersTable.id,
+      name : charactersTable.name,
+      achievements_required_number : charactersTable.achievement_required_number,
+      detail : charactersTable.detail 
+    }).from(charactersTable)
+    .innerJoin(playersTable, eq(charactersTable.id,playersTable.using_character_id))
+    .where(eq(playersTable.firebase_id,firebaseId))
+    .then(takeUniqueOrThrow)
 
   const response = {
     status : 200,
     message : "Ok",
-    result : result
+    response : result
   }
 
-  return new Response(
-    JSON.stringify(response),
-    { headers: { "Content-Type": "application/json" } },
-  )
+  return response
+}
+
+Deno.serve(async (req) => {
+  try{
+    const firebaseId = getFirebaseId(req.headers.get('Authorization')!)
+    const response = await getUsingCharacter(firebaseId)
+
+    return new Response(
+      JSON.stringify(response),
+      { headers: { "Content-Type": "application/json" } },
+    )
+  }
+  catch(error){
+    const response = {
+      status : error.status,
+      message : error.message,
+    }
+    return new Response(
+      JSON.stringify(response),
+      { headers: { "Content-Type": "application/json" } },
+    )
+  }
+  
 })
 
 /* To invoke locally:

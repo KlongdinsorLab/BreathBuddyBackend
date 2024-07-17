@@ -4,40 +4,56 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"
-import { getFirebaseId } from "../authFunctions.ts";
+import { getFirebaseId } from "../_shared/authFunctions.ts";
 import { db } from "../common/db.ts";
 import { charactersTable, playersCharactersTable, playersTable } from "../common/schema.ts";
 import { eq } from "npm:drizzle-orm@^0.31.2/expressions";
 
 console.log("Hello from Functions!")
 
-Deno.serve(async (req) => {
-  const firebaseId = getFirebaseId(req.headers.get('Authorization')!)
-  const player = (await db.select().from(playersTable)
-    .where(eq(playersTable.firebase_id,firebaseId))
-    .limit(1))[0]
+async function getUnlockedCharacters (firebaseId : string) {
 
-  const playerId = player.id
-  const characterIdList = await db.select().from(playersCharactersTable)
-    .where(eq(playersCharactersTable.player_id,playerId))
-
-  const result = []
-  for(let i = 0; i < characterIdList.length; i++) {
-    result.push((await db.select().from(charactersTable)
-      .where(eq(charactersTable.id,characterIdList[i].character_id)))[0])
-  }
-
-
+  const result = await db.select({
+      id : charactersTable.id,
+      name : charactersTable.name,
+      achievements_required_number : charactersTable.achievement_required_number,
+      detail : charactersTable.detail
+    })
+    .from(charactersTable)
+    .innerJoin(playersCharactersTable, eq(charactersTable.id, playersCharactersTable.character_id))
+    .innerJoin(playersTable, eq(playersCharactersTable.player_id, playersTable.id))
+    .where(eq(playersTable.firebase_id, firebaseId))
 
   const response = {
     status : 200,
     message : "Ok",
-    result : result
+    response : result
   }
-  return new Response(
-    JSON.stringify(response),
-    { headers: { "Content-Type": "application/json" } },
-  )
+
+  return response
+}
+
+Deno.serve(async (req) => {
+  try{
+    const firebaseId = getFirebaseId(req.headers.get('Authorization')!)
+    const response = await getUnlockedCharacters(firebaseId)
+  
+    return new Response(
+      JSON.stringify(response),
+      { headers: { "Content-Type": "application/json" } },
+    )
+  }
+  
+  catch(error){
+    const response = {
+      status : error.status,
+      message : error.message,
+    }
+    return new Response(
+      JSON.stringify(response),
+      { headers: { "Content-Type": "application/json" } },
+    )
+  }
 })
 
 /* To invoke locally:

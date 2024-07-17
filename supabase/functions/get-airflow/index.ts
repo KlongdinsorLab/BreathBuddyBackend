@@ -7,25 +7,51 @@ import "https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"
 import { db } from "../common/db.ts";
 import { playersTable } from "../common/schema.ts";
 import { eq } from "npm:drizzle-orm@^0.31.2/expressions";
-import { getFirebaseId } from "../authFunctions.ts";
+import { getFirebaseId } from "../_shared/authFunctions.ts";
+import { takeUniqueOrThrow } from "../_shared/takeUniqueOrThrow.ts";
 
 console.log("Hello from Functions!")
 
-Deno.serve(async (req) => {
-  
-  const firebaseId = getFirebaseId(req.headers.get('Authorization')!)
-  const result = (await db.select({airflow : playersTable.airflow}).from(playersTable).where(eq(playersTable.firebase_id,firebaseId)))[0]
+async function getAirflow(firebaseId : string) {
+  const result = await db.select({
+      airflow : playersTable.airflow
+    }).from(playersTable)
+    .where(eq(playersTable.firebase_id, firebaseId))
+    .then(takeUniqueOrThrow)
 
   const response = {
     status : 200,
     message : "Ok",
-    result : result
+    response : result
+  }
+
+  return response
+}
+
+Deno.serve(async (req) => {
+  
+  
+  try{
+    const firebaseId = getFirebaseId(req.headers.get('Authorization')!)
+    const response = await getAirflow(firebaseId)
+
+    return new Response(
+      JSON.stringify(response),
+      { headers: { "Content-Type": "application/json" } },
+    )
+  }
+  catch(error){
+    const response = {
+      status : error.status,
+      message : error.message,
+    }
+    return new Response(
+      JSON.stringify(response),
+      { headers: { "Content-Type": "application/json" } },
+    )
   }
   
-  return new Response(
-    JSON.stringify(response),
-    { headers: { "Content-Type": "application/json" } },
-  )
+  
 })
 
 /* To invoke locally:
