@@ -15,6 +15,13 @@
       "when": 1720411545168,
       "tag": "0001_married_wither",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1721284833165,
+      "tag": "0002_wakeful_redwing",
+      "breakpoints": true
     }
   ]
 }
