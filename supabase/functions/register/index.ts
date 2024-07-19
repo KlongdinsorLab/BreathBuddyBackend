@@ -8,7 +8,7 @@ import { db } from "../common/db.ts"
 import { charactersTable, playersCharactersTable, playersTable } from "../common/schema.ts";
 import { eq } from "npm:drizzle-orm@^0.31.2/expressions";
 import { takeUniqueOrThrow } from "../_shared/takeUniqueOrThrow.ts";
-import { getFirebaseId } from "../_shared/authFunctions.ts";
+import { getFirebaseId, getPhoneNumber } from "../_shared/authFunctions.ts";
 
 console.log("Hello from Functions!")
 
@@ -20,7 +20,7 @@ async function register(firebaseId : string, phoneNumber: string, age : number, 
     .where(eq(charactersTable.name,"Adventurer"))
     .then(takeUniqueOrThrow)
 
-  const advId = advObj.id
+  const advId = advObj.id ?? 1
 
   const newPlayer = await db.transaction( async (tx) => {
     const player = await tx.insert(playersTable).values({
@@ -29,7 +29,7 @@ async function register(firebaseId : string, phoneNumber: string, age : number, 
       difficulty_id : difficultyId ?? 1,
 
       // TODO consider again about ?? 1 part
-      using_character_id : advId ?? 1,
+      using_character_id : advId,
       gender : (gender === 'M') ? 'Male' : (gender === 'F' ? 'Female' : null),
       airflow : ( airflow < 100 || airflow > 600 || airflow%100 !== 0 ) ? airflow : null,
 
@@ -62,7 +62,12 @@ async function register(firebaseId : string, phoneNumber: string, age : number, 
 Deno.serve(async (req) => {
   try{
     const { phoneNumber, age, gender, airflow, difficultyId } = await req.json()
-    const firebaseId = getFirebaseId(req.headers.get("Authorization")!)
+    const authHeader = req.headers.get("Authorization")!
+    const firebaseId = getFirebaseId(authHeader)
+
+    if(phoneNumber !== getPhoneNumber(authHeader)) {
+      throw new Error("Authentication Error")
+    }
   
     const response = await register(firebaseId, phoneNumber, age, gender, airflow, difficultyId)
 
