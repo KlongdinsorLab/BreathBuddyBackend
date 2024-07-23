@@ -116,5 +116,10 @@ export const bossesTable = pgTable('bosses_table', {
   name: text('name').notNull().unique(),
   detail: text('detail')
 })
+
+export const testTable = pgTable('test_table', {
+  id: serial('id').primaryKey(),
+  name: text('name')
+})
 /*export type InsertUser = typeof usersTable.$inferInsert;
 export type SelectUser = typeof usersTable.$inferSelect;*/
