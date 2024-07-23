@@ -25,11 +25,9 @@ export const playersTable = pgTable('players_table', {
   firebase_id: text('firebase_id').notNull().unique(),
   phone_number: text('phone_number').notNull().unique(),
   difficulty_id: integer('difficulty_id').notNull()
-    .references(() => difficultiesTable.id, { onDelete: 'cascade' })
-    .default(1),
+    .references(() => difficultiesTable.id, { onDelete: 'cascade' }),
   using_character_id: integer('using_character_id').notNull()
-    .references(() => charactersTable.id, { onDelete: 'cascade' })
-    .default(1),
+    .references(() => charactersTable.id, { onDelete: 'cascade' }),
   username: text('username'),
   gender: text('gender', {enum: ["Male", "Female"] }),
   birth_year: integer('birth_year'),
