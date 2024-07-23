@@ -7,7 +7,7 @@
 import { db } from "../common/db.ts";
 import { usersTable } from "../common/schema.ts";
 
-console.log("Hello from Functions!!")
+console.log("Hello from Functions!!!")
 
 Deno.serve(async (req) => {
   const { name, age, email } = await req.json()
