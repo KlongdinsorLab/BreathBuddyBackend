@@ -16,7 +16,7 @@ export const difficultiesTable = pgTable('difficulties_table', {
 export const charactersTable = pgTable('characters_table', {
   id: serial('id').primaryKey(),
   name: text('name').notNull().unique(),
-  achievement_required_number: integer('achievement_required_number').notNull(),
+  achievement_number_required: integer('achievement_number_required').notNull(),
   detail: text('detail')
 })
 
@@ -26,7 +26,7 @@ export const playersTable = pgTable('players_table', {
   phone_number: text('phone_number').notNull().unique(),
   difficulty_id: integer('difficulty_id').notNull()
     .references(() => difficultiesTable.id, { onDelete: 'cascade' }),
-  using_character_id: integer('using_character_id').notNull()
+  selected_character_id: integer('using_character_id').notNull()
     .references(() => charactersTable.id, { onDelete: 'cascade' }),
   username: text('username'),
   gender: text('gender', {enum: ["Male", "Female"] }),
@@ -41,13 +41,13 @@ export const vasTable = pgTable('vas_table', {
   player_id: integer('player_id').notNull()
     .references(() => playersTable.id, { onDelete: 'cascade' }),
   vas_score: integer('vas_score').notNull(),
-  create_at: timestamp('create_at').notNull().defaultNow()
+  created_at: timestamp('create_at').notNull().defaultNow()
 })
 
 export const levelsTable = pgTable('levels_table', {
   id: serial('id').primaryKey(),
   level: integer('level').notNull().unique(),
-  score_require: integer('score_require').notNull()
+  score_required: integer('score_require').notNull()
 })
 
 export const gameSesstionsTable = pgTable('game_sessions_table', {
@@ -64,17 +64,34 @@ export const gameSesstionsTable = pgTable('game_sessions_table', {
   booster_drop_id: integer('booster_drop_id').notNull()
     .references(() => boostersTable.id, { onDelete: 'no action' }),
 
+  booster_drop_duration: integer('booster_drop_duration'),
+
   score: integer('score'),
   lap: integer('lap'),
-  start_at: timestamp('start_at').notNull().defaultNow(),
-  update_at: timestamp('update_at'),
-  end_at: timestamp('end_at'),
-  status: text('status', {enum: ['isWon', 'isCancel'] })
+  started_at: timestamp('start_at').notNull().defaultNow(),
+  updated_at: timestamp('update_at'),
+  ended_at: timestamp('end_at'),
+  status: text('status', {enum: ['end', 'active', 'cancel'] })
 })
 
 export const achievementsTable = pgTable('achievements_table', {
   id: serial('id').primaryKey(),
   name: text('name').notNull().unique(),
+  games_played_in_a_day: integer('games_played_in_a_day'),
+  games_played_consecutive_days: integer('games_played_consecutive_days'),
+  accumulative_score: integer('accumulative_score'),
+  games_played: integer('games_played'),
+  boosters: integer('boosters'),
+  booster_type: text('booster_type', { enum: ['normal','rare'] }),
+
+  // TODO better name?
+  booster_action: text('booster_action', { enum: ['use','gain'] }),
+
+  boss_id: integer('boss_id')
+    .references(() => bossesTable.id,{ onDelete: 'no action' }),
+
+  boss_encounter: integer('boss_encounter'),
+  characters_unlocked: integer('characters_unlocked'),
   detail: text('detail')
 })
 
@@ -106,9 +123,9 @@ export const playersBoostersTable = pgTable('players_boosters_table', {
     .references(() => playersTable.id, { onDelete: 'cascade' }),
   booster_id: integer('booster_id').notNull()
     .references(() => boostersTable.id, { onDelete: 'cascade' }),
-  expire_at: timestamp('expire_at'),
-  create_at: timestamp('create_at').notNull().defaultNow(),
-  status: text('status', {enum : ["ready", "used"] })
+  expired_at: timestamp('expire_at'),
+  created_at: timestamp('create_at').notNull().defaultNow(),
+  status: text('status', {enum : ["active", "used"] })
 })
 
 export const bossesTable = pgTable('bosses_table', {
