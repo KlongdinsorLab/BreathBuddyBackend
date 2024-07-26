@@ -1,11 +1,5 @@
 import { integer, pgTable, serial, text, timestamp, real } from 'drizzle-orm/pg-core';
 
-export const usersTable = pgTable('users_table', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
-  age: integer('age').notNull(),
-  email: text('email').notNull().unique(),
-});
 
 export const difficultiesTable = pgTable('difficulties_table', {
   id: serial('id').primaryKey(),
@@ -26,10 +20,10 @@ export const playersTable = pgTable('players_table', {
   phone_number: text('phone_number').notNull().unique(),
   difficulty_id: integer('difficulty_id').notNull()
     .references(() => difficultiesTable.id, { onDelete: 'cascade' }),
-  selected_character_id: integer('using_character_id').notNull()
+  selected_character_id: integer('selected_character_id').notNull()
     .references(() => charactersTable.id, { onDelete: 'cascade' }),
   username: text('username'),
-  gender: text('gender', {enum: ["Male", "Female"] }),
+  gender: text('gender', {enum: ["M", "F"] }),
   birth_year: integer('birth_year'),
   airflow: integer('airflow'),
   last_played_at: timestamp('last_played_at'),
@@ -41,16 +35,16 @@ export const vasTable = pgTable('vas_table', {
   player_id: integer('player_id').notNull()
     .references(() => playersTable.id, { onDelete: 'cascade' }),
   vas_score: integer('vas_score').notNull(),
-  created_at: timestamp('create_at').notNull().defaultNow()
+  created_at: timestamp('created_at').notNull().defaultNow()
 })
 
 export const levelsTable = pgTable('levels_table', {
   id: serial('id').primaryKey(),
   level: integer('level').notNull().unique(),
-  score_required: integer('score_require').notNull()
+  score_required: integer('score_required').notNull()
 })
 
-export const gameSesstionsTable = pgTable('game_sessions_table', {
+export const gameSessionsTable = pgTable('game_sessions_table', {
   id: serial('id').primaryKey(),
   player_id: integer('player_id').notNull()
     .references(() => playersTable.id, { onDelete: 'no action' }),
@@ -65,13 +59,12 @@ export const gameSesstionsTable = pgTable('game_sessions_table', {
     .references(() => boostersTable.id, { onDelete: 'no action' }),
 
   booster_drop_duration: integer('booster_drop_duration'),
-
   score: integer('score'),
   lap: integer('lap'),
-  started_at: timestamp('start_at').notNull().defaultNow(),
-  updated_at: timestamp('update_at'),
-  ended_at: timestamp('end_at'),
-  status: text('status', {enum: ['end', 'active', 'cancel'] })
+  started_at: timestamp('started_at').notNull().defaultNow(),
+  updated_at: timestamp('updated_at'),
+  ended_at: timestamp('ended_at'),
+  status: text('status', {enum: ['END', 'ACTIVE', 'CANCEL'] })
 })
 
 export const achievementsTable = pgTable('achievements_table', {
@@ -81,11 +74,12 @@ export const achievementsTable = pgTable('achievements_table', {
   games_played_consecutive_days: integer('games_played_consecutive_days'),
   accumulative_score: integer('accumulative_score'),
   games_played: integer('games_played'),
-  boosters: integer('boosters'),
-  booster_type: text('booster_type', { enum: ['normal','rare'] }),
+  boosters_number: integer('boosters_number'), // TODO Booster Amount?
+  booster_type: text('booster_type', { enum: ['NORMAL','RARE'] }),
 
   // TODO better name?
-  booster_action: text('booster_action', { enum: ['use','gain'] }),
+  booster_action: text('booster_action', { enum: ['USE','GAIN'] }),
+  booster_unique:text('booster_unique' , { enum: ['UNIQUE','NONUNIQUE'] }),
 
   boss_id: integer('boss_id')
     .references(() => bossesTable.id,{ onDelete: 'no action' }),
@@ -98,6 +92,7 @@ export const achievementsTable = pgTable('achievements_table', {
 export const boostersTable = pgTable('boosters_table', {
   id: serial('id').primaryKey(),
   name: text('name').notNull().unique(),
+  type: text('type', {enum : ["NORMAL", "RARE"] }).notNull(),
   detail: text('detail')
 })
 
@@ -123,9 +118,9 @@ export const playersBoostersTable = pgTable('players_boosters_table', {
     .references(() => playersTable.id, { onDelete: 'cascade' }),
   booster_id: integer('booster_id').notNull()
     .references(() => boostersTable.id, { onDelete: 'cascade' }),
-  expired_at: timestamp('expire_at'),
-  created_at: timestamp('create_at').notNull().defaultNow(),
-  status: text('status', {enum : ["active", "used"] })
+  expired_at: timestamp('expired_at'),
+  created_at: timestamp('created_at').notNull().defaultNow(),
+  status: text('status', {enum : ["ACTIVE", "USED"] })
 })
 
 export const bossesTable = pgTable('bosses_table', {
@@ -134,9 +129,5 @@ export const bossesTable = pgTable('bosses_table', {
   detail: text('detail')
 })
 
-export const testTable = pgTable('test_table', {
-  id: serial('id').primaryKey(),
-  name: text('name')
-})
 /*export type InsertUser = typeof usersTable.$inferInsert;
 export type SelectUser = typeof usersTable.$inferSelect;*/
