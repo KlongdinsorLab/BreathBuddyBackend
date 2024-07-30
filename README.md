@@ -68,3 +68,11 @@ $ supabase functions deploy <function name> --project-ref dtfbxtfpdfpwflcjxttr
 <!-- https://www.youtube.com/watch?v=l2KlzGrhB6w -->
 
 https://supabase.com/docs/guides/cli/local-development
+
+### Seeding
+
+```sh
+$ deno run .\supabase\functions\common\seed.ts
+```
+
+And define "SUPABASE_URL" and "SUPABASE_DB_URL" in .env file
