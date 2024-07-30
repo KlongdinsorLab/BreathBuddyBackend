@@ -1,4 +1,11 @@
-import { integer, pgTable, serial, text, timestamp, real } from 'drizzle-orm/pg-core';
+import { integer, pgTable, serial, text, timestamp, real, pgEnum } from 'drizzle-orm/pg-core';
+
+export const genderEnum = pgEnum('gender', ['M','F'])
+export const gameSessionStatusEnum = pgEnum('game_session_status', ['ACTIVE','CANCEL','END'])
+export const boosterTypeEnum = pgEnum('booster_type', ['NORMAL','RARE'])
+export const boosterActionEnum = pgEnum('booster_action', ['USE','GAIN'])
+export const boosterUniqueEnum = pgEnum('booster_unique', ['UNIQUE','NONUNIQUE'])
+export const playerBoosterStatusEnum = pgEnum('player_booster_status', ['ACTIVE','USED'])
 
 
 export const difficultiesTable = pgTable('difficulties_table', {
@@ -23,7 +30,7 @@ export const playersTable = pgTable('players_table', {
   selected_character_id: integer('selected_character_id').notNull()
     .references(() => charactersTable.id, { onDelete: 'cascade' }),
   username: text('username'),
-  gender: text('gender', {enum: ["M", "F"] }),
+  gender: genderEnum('gender'),
   birth_year: integer('birth_year'),
   airflow: integer('airflow'),
   last_played_at: timestamp('last_played_at'),
@@ -64,7 +71,7 @@ export const gameSessionsTable = pgTable('game_sessions_table', {
   started_at: timestamp('started_at').notNull().defaultNow(),
   updated_at: timestamp('updated_at'),
   ended_at: timestamp('ended_at'),
-  status: text('status', {enum: ['END', 'ACTIVE', 'CANCEL'] })
+  status: gameSessionStatusEnum('status')
 })
 
 export const achievementsTable = pgTable('achievements_table', {
@@ -75,11 +82,11 @@ export const achievementsTable = pgTable('achievements_table', {
   accumulative_score: integer('accumulative_score'),
   games_played: integer('games_played'),
   boosters_number: integer('boosters_number'), // TODO Booster Amount?
-  booster_type: text('booster_type', { enum: ['NORMAL','RARE'] }),
+  booster_type: boosterTypeEnum('booster_type'),
 
   // TODO better name?
-  booster_action: text('booster_action', { enum: ['USE','GAIN'] }),
-  booster_unique:text('booster_unique' , { enum: ['UNIQUE','NONUNIQUE'] }),
+  booster_action: boosterActionEnum('booster_action'),
+  booster_unique: boosterUniqueEnum('booster_unique'),
 
   boss_id: integer('boss_id')
     .references(() => bossesTable.id,{ onDelete: 'no action' }),
@@ -92,7 +99,7 @@ export const achievementsTable = pgTable('achievements_table', {
 export const boostersTable = pgTable('boosters_table', {
   id: serial('id').primaryKey(),
   name: text('name').notNull().unique(),
-  type: text('type', {enum : ["NORMAL", "RARE"] }).notNull(),
+  type: boosterTypeEnum('type').notNull(),
   detail: text('detail')
 })
 
@@ -120,7 +127,7 @@ export const playersBoostersTable = pgTable('players_boosters_table', {
     .references(() => boostersTable.id, { onDelete: 'cascade' }),
   expired_at: timestamp('expired_at'),
   created_at: timestamp('created_at').notNull().defaultNow(),
-  status: text('status', {enum : ["ACTIVE", "USED"] })
+  status: playerBoosterStatusEnum('status').notNull()
 })
 
 export const bossesTable = pgTable('bosses_table', {
