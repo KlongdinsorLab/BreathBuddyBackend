@@ -169,29 +169,30 @@ export async function getNewAchivements(playerId : number) {
     const lockedAchievements = await getLockedAchievements(playerId)
     const gameSessionList = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id, playerId))
 
-    lockedAchievements.forEach((element) => {
-        checkAchievement(playerId, element, gameSessionList)
+    lockedAchievements.forEach(async (element) => {
+        await checkAchievement(playerId, element, gameSessionList)
     })
 
 
 }
 
 export async function checkAchievement(playerId : number, achievement : achievementInterface, gameSessionList : gameSessionInterface[]) {
+    let unlock : boolean = true
     if(achievement.accumulative_score !== null) {
-        if(checkAchievementScore({id: playerId},achievement,gameSessionList)) await unlockAchievement(playerId,achievement.id)
+        if(!checkAchievementScore(playerId,achievement,gameSessionList)) unlock = false 
     }
-    // if(achievement.games_played) {
-    //     console.log(achievement.games_played)
-    //     console.log(checkAchievementTotalGames({id: playerId},achievement,gameSessionList))
-    // }
-    // if(achievement.boss_id) {
-    //     console.log("Achievement Id : " + achievement.id)
-    //     console.log(checkAchievementBossEncounters({id: playerId},achievement,gameSessionList))
-    // }
+    if(achievement.games_played !== null) {
+        if(!checkAchievementTotalGames(playerId,achievement,gameSessionList)) unlock = false  
+    }
+    if(achievement.boss_id !== null) {
+        if(!checkAchievementBossEncounters(playerId,achievement,gameSessionList)) await unlockAchievement(playerId, achievement.id)
+    }
     // if(achievement.characters_unlocked) {
     //     console.log("Achievement Id : " + achievement.id)
     //     console.log(checkAchievementCharactersUnlocked({id: playerId},achievement,gameSessionList))
     // }
+
+    if(unlock) await unlockAchievement(playerId,achievement.id) 
 }
 
 export async function unlockAchievement (playerId: number, achievementId: number){
@@ -202,13 +203,11 @@ export async function unlockAchievement (playerId: number, achievementId: number
 }
 
 export function checkAchievementScore(
-    player : {id: number}, 
+    playerId : number, 
     achievement : achievementInterface,
     gameSessionList : {id: number, score: number | null}[]
 ) : boolean{
-    if(player.id === null || !achievement.id === null || achievement.accumulative_score === null) {
-        return false
-    }
+    if(playerId === null || achievement.id === null || achievement.accumulative_score === null) return false
 
     let totalScore = 0
     gameSessionList.forEach((element) => {
@@ -217,30 +216,42 @@ export function checkAchievementScore(
 
     console.log("Score Requied : " + achievement.accumulative_score + "\nPlayer Score : " + totalScore)
 
-    if(totalScore >= achievement.accumulative_score!) return true 
-    else return false
+    if(totalScore >= achievement.accumulative_score!){ 
+        console.log(true) 
+        return true 
+    }
+    else {
+        console.log(false)
+        return false
+    }
 }
 
 export function checkAchievementTotalGames(
-    player : {id: number},
+    playerId : number,
     achievement : achievementInterface,
     gameSessionList : gameSessionInterface[]
 ) : boolean {
-    if(!player.id || achievement.id || achievement.games_played) return false
+    if(playerId === null || achievement.id === null || achievement.games_played === null) return false
 
-    const endedGameSessionList = gameSessionList.filter((element) => {element.status === "END"})
+    const endedGameSessionList = gameSessionList.filter((element) => 
+        element.status === "END")
+
+    console.log("Game Required : " + achievement.games_played + "\nGame Finished : " + endedGameSessionList.length)
+
     if (endedGameSessionList.length >= achievement.games_played!) return true
     else return false
 }
 
 export function checkAchievementBossEncounters(
-    player : {id : number},
+    playerId : number,
     achievement : achievementInterface,
     gameSessionList : gameSessionInterface[]
 ) : boolean {
-    if(!player.id || achievement.id || achievement.boss_id || achievement.boss_encounter) return false
+    if(playerId === null || achievement.id === null || achievement.boss_id === null || achievement.boss_encounter === null) return false
 
-    const bossGameSessionList = gameSessionList.filter((element) => {element.boss_id === achievement.boss_id})
+    const bossGameSessionList = gameSessionList.filter((element) => element.boss_id === achievement.boss_id)
+
+    console.log("Boss " + achievement.boss_id + " Required : " + achievement.boss_encounter + "\n Boss " + achievement.boss_id + " Encountered : " + bossGameSessionList.length)
     if(bossGameSessionList.length >= achievement.boss_encounter!) return true
     else return false
 }
