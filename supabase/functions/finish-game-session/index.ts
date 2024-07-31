@@ -25,6 +25,11 @@ Deno.serve(async (req) => {
     score,
     lap,
     isReceiveBooster
+  } : {
+    gameSessionId: number;
+    score: number;
+    lap: number;
+    isReceiveBooster: boolean;
   } = await req.json()
 
   // Validate required fields
@@ -40,10 +45,28 @@ Deno.serve(async (req) => {
     });
   }
 
-  // todo check type parameter fields
+  // check type
+  if(
+    typeof gameSessionId !== 'number' ||
+    typeof score !== 'number' ||
+    typeof lap !== 'number'||
+    typeof isReceiveBooster !== 'boolean'
+  ) {
+    return new Response(JSON.stringify({ error: "Fields missed type: gameSessionId: number, score: number, lap: number and isReceiveBooster: boolean" }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   if (lap < 10) {
     return new Response(JSON.stringify({ error: "This game session is not finishing. (Lap < 10)" }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  if (lap > 10) {
+    return new Response(JSON.stringify({ error: "This game session has something wrong. (Lap > 10)" }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
