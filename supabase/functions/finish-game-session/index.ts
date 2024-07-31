@@ -18,6 +18,8 @@ Deno.serve(async (req) => {
     });
   }
 
+  // todo check others condition
+
   const { 
     gameSessionId,
     score,

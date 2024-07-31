@@ -3,8 +3,8 @@ import {
      boostersTable, 
      charactersTable, 
      difficultiesTable,
-     playersTable,
-     gameSessionsTable
+     achievementsTable,
+     levelsTable
 } from "./schema.ts"
 import postgres from "npm:postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -18,34 +18,95 @@ if (!connectionString) {
   throw new Error("DB_URL is not defined in the .env file");
 }
 
-console.log(connectionString)
-
 const client = postgres(connectionString, { prepare: false });
 const db = drizzle(client);
 
+// run by $ deno run .\supabase\functions\common\seed.ts
 const seed = async () => {
 
-     // deleting all table's value
-     console.log("Prepare for seed... (delete all table's values)")
-     // beware foreign key that can not delete so todo is order delete
-     await db.delete(gameSessionsTable)
-     await db.delete(playersTable)
-     await db.delete(difficultiesTable)
-     await db.delete(charactersTable)
-     await db.delete(boostersTable)
-     await db.delete(bossesTable)
-     console.log("Prepare for seed done")
-
-     // seeding bosses Table
+     // seeding Levels Table
+     console.log("Seeding Levels")
+     try {
+          await db.insert(levelsTable).values([
+               {
+                    id: 1,
+                    level: 1,
+                    score_required: 0,
+               },
+               {
+                    id: 2,
+                    level: 2,
+                    score_required: 85000,
+               },
+               {
+                    id: 3,
+                    level: 3,
+                    score_required: 850000,
+               },
+               {
+                    id: 4,
+                    level: 4,
+                    score_required: 2125000,
+               },
+               {
+                    id: 5,
+                    level: 5,
+                    score_required: 3825000,
+               },
+               {
+                    id: 6,
+                    level: 6,
+                    score_required: 5190000,
+               },
+               {
+                    id: 7,
+                    level: 7,
+                    score_required: 10200000,
+               },
+               {
+                    id: 8,
+                    level: 8,
+                    score_required: 15300000,
+               },
+               {
+                    id: 9,
+                    level: 9,
+                    score_required: 21250000,
+               },
+               {
+                    id: 10,
+                    level: 10,
+                    score_required: 28050000,
+               },
+          ])
+          console.log("Seed Levels Done")
+     } catch (error) {
+          console.log("LevelsTable : ", error)
+     }
+    
+     // seeding Bosses Table
      console.log("Seeding Bosses...")
      try {
-          await db.insert(bossesTable).values([{
+          await db.insert(bossesTable).values([
+               {
                     id: 1,
                     name: "เอเลี่ยนซ่า"
                },
                {
                     id: 2,
                     name: "สไลม์คิง"
+               },
+               {
+                    id: 3,
+                    name: "แมว"
+               },
+               {
+                    id: 4,
+                    name: "คางคก"
+               },
+               {
+                    id: 5,
+                    name: "ไก่ทอด"
                }
           ])
           console.log("Seed Bosses Done")
@@ -115,7 +176,7 @@ const seed = async () => {
                },
                {
                     id: 3,
-                    name: "Thief",
+                    name: "จอมโจร",
                     detail: "สมบัติของเธอ ขอรับไปละนะ",
                     achievement_number_required: 8
                }
@@ -150,50 +211,110 @@ const seed = async () => {
           console.log("DifficultiesTable: ", error);
      }
 
-     // todo these seeds for test function
-     // todo delete this code when seed for production 
-
-     // seeding players Table
-     console.log("Seeding Players...")
+     // seeding Achievements Table
+     console.log("Seeding Achievements...")
      try {
-          await db.insert(playersTable).values([
+          await db.insert(achievementsTable).values([
                {
                     id: 1,
-                    firebase_id : "abc",
-                    phone_number: "0123456789",
-                    difficulty_id: 1,
-                    selected_character_id: 1
+                    name: "3hearts",
+                    games_played_in_a_day: 3
                },
                {
                     id: 2,
-                    firebase_id : "123",
-                    phone_number: "0213456789",
-                    difficulty_id: 1,
-                    selected_character_id: 1
-               }
+                    name: "3days",
+                    games_played_consecutive_days: 3
+               },
+               {
+                    id: 3,
+                    name: "5days",
+                    games_played_consecutive_days: 5
+               },
+               {
+                    id: 4,
+                    name: "7days",
+                    games_played_consecutive_days: 7
+               },
+               {
+                    id: 5,
+                    name: "500k",
+                    accumulative_score: 5e5
+               },
+               {
+                    id: 6,
+                    name: "3M",
+                    accumulative_score: 3e6
+               },
+               {
+                    id: 7,
+                    name: "8M",
+                    accumulative_score: 8e6
+               },
+               {
+                    id: 8,
+                    name: "20M",
+                    accumulative_score: 20e6
+               },
+               {
+                    id: 9,
+                    name: "10 games",
+                    games_played: 10
+               },
+               {
+                    id: 10,
+                    name: "100 games",
+                    games_played: 100
+               },
+               {
+                    id: 11,
+                    name: "200 games",
+                    games_played: 200
+               },
+               {
+                    id: 12,
+                    name: "10 boosters",
+                    boosters_number: 10,
+                    booster_action: "USE",
+                    booster_type: "NORMAL",
+                    booster_unique: "NONUNIQUE"
+               },
+               {
+                    id: 13,
+                    name: "5boosterrares",
+                    boosters_number: 5,
+                    booster_action: "USE",
+                    booster_type: "RARE",
+                    booster_unique: "NONUNIQUE"
+               },
+               {
+                    id: 14,
+                    name: "7boosters", 
+                    boosters_number: 7,
+                    booster_action: "GAIN",
+                    booster_unique: "UNIQUE"
+               },
+               {
+                    id: 15,
+                    name: "20gamesb4",
+                    boss_encounter: 20,
+                    boss_id: 4
+               },
+               {
+                    id: 16,
+                    name: "30gamesb5",
+                    boss_encounter: 30,
+                    boss_id: 5
+               },
+               {
+                    id: 17,
+                    name: "4mc",
+                    characters_unlocked: 4
+               },
           ])
-          console.log("Seed Players Done")
+          console.log("Seed Achievements Done")
      } catch (error) {
-          console.log("PlayersTable: ", error)
+          console.log("AchievementsTable : ", error)
      }
-
-     // seeding gameSessions table
-     console.log("Seeding GameSession...")
-     try {
-          await db.insert(gameSessionsTable).values({
-               id: 1,
-               player_id: 1,
-               difficulty_id: 2,
-               boss_id: 1,
-               booster_drop_id: 2,
-               score: 68721,
-               status: "ACTIVE",
-               lap: 4
-          })
-          console.log("Seed GameSession Done")
-     } catch (error) {
-          console.log("GameSessionsTable: ", error)
-     } 
 }
 
 console.log('Seed Start')
