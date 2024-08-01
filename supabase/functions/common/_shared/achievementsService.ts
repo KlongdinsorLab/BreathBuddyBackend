@@ -184,7 +184,7 @@ export async function getAllAchievements() {
 
 export async function getNewAchivements(playerId : number) {
     const lockedAchievements = await getAllAchievements()
-    const gameSessionList = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id, playerId))
+    const gameSessionList = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id, playerId)).orderBy(gameSessionsTable.started_at)
     const playersCharactersList = await db.select().from(playersCharactersTable).where(eq(playersCharactersTable.player_id,playerId))
     const playersBoostersList = await db.select({
             id : playersBoostersTable.id,
@@ -203,8 +203,9 @@ export async function getNewAchivements(playerId : number) {
     //     await checkAchievement(playerId, element, gameSessionList)
     // })
 
-    for(let i = 0;i < lockedAchievements.length;i++) await checkAchievement(playerId, lockedAchievements[i],gameSessionList,playersCharactersList,playersBoostersList)
+    //for(let i = 0;i < lockedAchievements.length;i++) await checkAchievement(playerId, lockedAchievements[i],gameSessionList,playersCharactersList,playersBoostersList)
 
+    testDateList(gameSessionList)
 
 }
 
@@ -348,3 +349,31 @@ export function checkAchievementBoosters(
     else return false
 }
 
+export function checkAchievementGamesPlayedInADay(
+    playerId : number,
+    achievement : achievementInterface,
+    gameSessionList :  gameSessionInterface[]
+){
+    // TODO
+}
+
+export function checkAchievementGamesPlayedConsecutiveDay(
+    playerId : number,
+    achievement : achievementInterface,
+    gameSessionList :  gameSessionInterface[]
+){
+    // TODO
+}
+
+export function checkOneDayApart(date1 : Date, date2 : Date) : boolean {
+    const date1Tomorrow = new Date(date1.getUTCFullYear(), date1.getUTCMonth(), date1.getUTCDate() + 1)
+    return date1Tomorrow.getUTCFullYear() === date2.getUTCFullYear() 
+        && date1Tomorrow.getUTCMonth() === date2.getUTCMonth()
+        && date1Tomorrow.getUTCDate() === date2.getUTCDate()
+}
+
+export function checkSameDay(date1 : Date, date2 : Date) : boolean {
+    return date1.getUTCFullYear() === date2.getUTCFullYear() 
+        && date1.getUTCMonth() === date2.getUTCMonth()
+        && date1.getUTCDate() === date2.getUTCDate()
+}
