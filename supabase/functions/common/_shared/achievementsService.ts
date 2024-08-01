@@ -169,9 +169,11 @@ export async function getNewAchivements(playerId : number) {
     const lockedAchievements = await getLockedAchievements(playerId)
     const gameSessionList = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id, playerId))
 
-    lockedAchievements.forEach(async (element) => {
-        await checkAchievement(playerId, element, gameSessionList)
-    })
+    // lockedAchievements.forEach(async (element) => {
+    //     await checkAchievement(playerId, element, gameSessionList)
+    // })
+
+    for(let i = 0;i < lockedAchievements.length;i++) await checkAchievement(playerId, lockedAchievements[i],gameSessionList)
 
 
 }
@@ -185,7 +187,7 @@ export async function checkAchievement(playerId : number, achievement : achievem
         if(!checkAchievementTotalGames(playerId,achievement,gameSessionList)) unlock = false  
     }
     if(achievement.boss_id !== null) {
-        if(!checkAchievementBossEncounters(playerId,achievement,gameSessionList)) await unlockAchievement(playerId, achievement.id)
+        if(!checkAchievementBossEncounters(playerId,achievement,gameSessionList)) unlock = false
     }
     // if(achievement.characters_unlocked) {
     //     console.log("Achievement Id : " + achievement.id)
@@ -257,11 +259,13 @@ export function checkAchievementBossEncounters(
 }
 
 export function checkAchievementCharactersUnlocked(
-    player : {id: number},
+    playerId : number,
     achievement : achievementInterface,
     playersChractersList : gameSessionInterface[]
 ) : boolean {
-    if(!player.id || achievement.id || achievement.characters_unlocked) return false
+    if(playerId === null || achievement.id === null || achievement.characters_unlocked === null) return false
+
+    console.log("Character Required : " + achievement.characters_unlocked + "\nCharacter Unlocked : " + playersChractersList.length)
 
     if(playersChractersList.length >= achievement.characters_unlocked!) return true
     else return false
