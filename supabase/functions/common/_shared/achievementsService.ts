@@ -1,7 +1,8 @@
 import { and, eq, isNotNull, notExists, or } from "npm:drizzle-orm@^0.31.2/expressions";
 import { db } from "../db.ts";
-import { achievementsTable, gameSessionStatusEnum, gameSessionsTable, playersAchievementsTable, } from "../schema.ts";
+import { achievementsTable, gameSessionsTable, playersAchievementsTable, playersCharactersTable, } from "../schema.ts";
 import { playersBoostersTable } from "../schema.ts";
+import { boostersTable } from "../schema.ts";
 
 interface achievementInterface {
     id: number
@@ -31,6 +32,22 @@ interface gameSessionInterface {
     updated_at: Date | null,
     ended_at: Date | null,
     status: string | null
+}
+
+interface playersCharactersInterface {
+    id: number,
+    player_id: number,
+    character_id: number
+}
+
+interface playersBoostersInterface {
+    id: number,
+    player_id: number,
+    booster_id: number,
+    expired_at: Date | null,
+    created_at: Date,
+    status: string
+    type: string
 }
 
 export async function getLockedAchievementsSelectCharacter/* or MyBag? */(playerId: number) {
@@ -166,33 +183,60 @@ export async function getAllAchievements() {
 }
 
 export async function getNewAchivements(playerId : number) {
-    const lockedAchievements = await getLockedAchievements(playerId)
+    const lockedAchievements = await getAllAchievements()
     const gameSessionList = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id, playerId))
+    const playersCharactersList = await db.select().from(playersCharactersTable).where(eq(playersCharactersTable.player_id,playerId))
+    const playersBoostersList = await db.select({
+            id : playersBoostersTable.id,
+            player_id : playersBoostersTable.player_id,
+            booster_id : playersBoostersTable.booster_id,
+            expired_at : playersBoostersTable.expired_at,
+            created_at : playersBoostersTable.created_at,
+            status : playersBoostersTable.status,
+            type : boostersTable.type
+        }).from(playersBoostersTable)
+        .where(eq(playersBoostersTable.player_id,playerId))
+        .innerJoin(boostersTable,eq(boostersTable.id,playersBoostersTable.booster_id))
+
 
     // lockedAchievements.forEach(async (element) => {
     //     await checkAchievement(playerId, element, gameSessionList)
     // })
 
-    for(let i = 0;i < lockedAchievements.length;i++) await checkAchievement(playerId, lockedAchievements[i],gameSessionList)
+    for(let i = 0;i < lockedAchievements.length;i++) await checkAchievement(playerId, lockedAchievements[i],gameSessionList,playersCharactersList,playersBoostersList)
 
 
 }
 
-export async function checkAchievement(playerId : number, achievement : achievementInterface, gameSessionList : gameSessionInterface[]) {
+export async function checkAchievement(
+    playerId : number, 
+    achievement : achievementInterface, 
+    gameSessionList : gameSessionInterface[],
+    playersCharactersList : playersCharactersInterface[],
+    playersBoostersList: playersBoostersInterface[]
+) {
     let unlock : boolean = true
+
     if(achievement.accumulative_score !== null) {
-        if(!checkAchievementScore(playerId,achievement,gameSessionList)) unlock = false 
+        unlock = unlock && checkAchievementScore(playerId,achievement,gameSessionList)
     }
+
     if(achievement.games_played !== null) {
-        if(!checkAchievementTotalGames(playerId,achievement,gameSessionList)) unlock = false  
+        unlock = unlock && checkAchievementTotalGames(playerId,achievement,gameSessionList)
     }
+
     if(achievement.boss_id !== null) {
-        if(!checkAchievementBossEncounters(playerId,achievement,gameSessionList)) unlock = false
+        unlock = unlock && checkAchievementBossEncounters(playerId,achievement,gameSessionList)
     }
-    // if(achievement.characters_unlocked) {
-    //     console.log("Achievement Id : " + achievement.id)
-    //     console.log(checkAchievementCharactersUnlocked({id: playerId},achievement,gameSessionList))
-    // }
+
+    if(achievement.characters_unlocked) {
+        unlock = unlock && checkAchievementCharactersUnlocked(playerId, achievement, playersCharactersList)
+    }
+
+    if(achievement.boosters_number) {
+        unlock = unlock && checkAchievementBoosters(playerId,achievement,playersBoostersList)
+    }
+    
 
     if(unlock) await unlockAchievement(playerId,achievement.id) 
 }
@@ -261,7 +305,7 @@ export function checkAchievementBossEncounters(
 export function checkAchievementCharactersUnlocked(
     playerId : number,
     achievement : achievementInterface,
-    playersChractersList : gameSessionInterface[]
+    playersChractersList : playersCharactersInterface[]
 ) : boolean {
     if(playerId === null || achievement.id === null || achievement.characters_unlocked === null) return false
 
@@ -272,12 +316,35 @@ export function checkAchievementCharactersUnlocked(
 }
 
 export function checkAchievementBoosters(
-    player : {id: number},
-    achievement : {id: number, booster_number: number},
-    playersBoostersList : {id: number, player_id: number, booster_id: number, status: string}[]
+    playerId : number,
+    achievement : achievementInterface,
+    playersBoostersList : playersBoostersInterface[]
 ) : boolean {
-    if(!player.id || achievement.booster_number || achievement.id) return false
+    if(
+        playerId === null || 
+        achievement.boosters_number === null || 
+        achievement.id === null || 
+        achievement.booster_action === null
+    ) return false
 
-    if(playersBoostersList.length >= achievement.booster_number) return true
+    let totalNumber : number = playersBoostersList.length
+    if(achievement.booster_action === "USE") {
+        playersBoostersList = playersBoostersList.filter((element) => element.status === "USED")
+        totalNumber = playersBoostersList.length
+    }
+
+    if(achievement.booster_type !== null){
+        playersBoostersList = playersBoostersList.filter((element) => element.type === achievement.booster_type)
+        totalNumber = playersBoostersList.length
+    } 
+    
+    if(achievement.booster_unique === "UNIQUE"){ 
+        const uniqueBoosterList = [...new Set(playersBoostersList.map(item => item.booster_id))]
+        totalNumber = uniqueBoosterList.length
+        console.log(uniqueBoosterList)
+    }
+
+    if(totalNumber >= achievement.boosters_number!) return true
     else return false
 }
+
