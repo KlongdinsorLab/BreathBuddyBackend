@@ -182,8 +182,8 @@ export async function getAllAchievements() {
     return achievements
 }
 
-export async function getNewAchivements(playerId : number) {
-    const lockedAchievements = await getAllAchievements()
+export async function getNewAchivements(playerId : number) { // Call this
+    const lockedAchievements = await getAllAchievements() // TODO change to getLockedAchievements 
     const gameSessionList = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id, playerId)).orderBy(gameSessionsTable.started_at)
     const playersCharactersList = await db.select().from(playersCharactersTable).where(eq(playersCharactersTable.player_id,playerId))
     const playersBoostersList = await db.select({
@@ -200,12 +200,10 @@ export async function getNewAchivements(playerId : number) {
 
 
     // lockedAchievements.forEach(async (element) => {
-    //     await checkAchievement(playerId, element, gameSessionList)
+    //     await checkAchievement(playerId, element, gameSessionList, playersCharactersList,playersBoostersList)
     // })
 
-    //for(let i = 0;i < lockedAchievements.length;i++) await checkAchievement(playerId, lockedAchievements[i],gameSessionList,playersCharactersList,playersBoostersList)
-
-    testDateList(gameSessionList)
+    for(let i = 0;i < lockedAchievements.length;i++) await checkAchievement(playerId, lockedAchievements[i],gameSessionList,playersCharactersList,playersBoostersList)
 
 }
 
@@ -236,6 +234,14 @@ export async function checkAchievement(
 
     if(achievement.boosters_number) {
         unlock = unlock && checkAchievementBoosters(playerId,achievement,playersBoostersList)
+    }
+
+    if(achievement.games_played_in_a_day) {
+        unlock = unlock && checkAchievementGamesPlayedInADay(playerId,achievement,gameSessionList)
+    }
+
+    if(achievement.games_played_consecutive_days) {
+        unlock = unlock && checkAchievementGamesPlayedConsecutiveDay(playerId,achievement,gameSessionList)
     }
     
 
@@ -353,8 +359,40 @@ export function checkAchievementGamesPlayedInADay(
     playerId : number,
     achievement : achievementInterface,
     gameSessionList :  gameSessionInterface[]
-){
+) : boolean{
     // TODO
+    if(playerId === null || 
+        achievement.games_played_in_a_day === null
+    ) {
+        return false
+    }
+
+
+    let max : number = 0
+    let count : number = 1
+    gameSessionList.forEach((_gameSession, index) => {
+        if(index === 0) return
+
+        const isSameDay = checkSameDay(gameSessionList[index - 1].started_at, gameSessionList[index].started_at)
+        
+        if(isSameDay) {
+            count += 1
+        }
+        else {
+            if(count > max) { max = count }
+            count = 1
+        }
+    })
+
+    if(count > max) { max = count }
+
+    console.log("Games in a Day Required : " + achievement.games_played_in_a_day + "\nGames played in a day : " + max)
+    console.log(max >= achievement.games_played_in_a_day!)
+
+    return max >= achievement.games_played_in_a_day!
+
+    // if(max >= achievement.games_played_in_a_day!) return true
+    // else return false
 }
 
 export function checkAchievementGamesPlayedConsecutiveDay(
@@ -362,6 +400,36 @@ export function checkAchievementGamesPlayedConsecutiveDay(
     achievement : achievementInterface,
     gameSessionList :  gameSessionInterface[]
 ){
+    if(playerId === null || 
+        achievement.games_played_consecutive_days === null
+    ) {
+        return false
+    }
+
+    let count : number = 1
+    let max : number = 0
+    gameSessionList.forEach((_gameSession, index) => {
+        if(index === gameSessionList.length - 1) return
+
+        if(checkOneDayApart(gameSessionList[index].started_at, gameSessionList[index + 1].started_at)) {
+            count += 1
+        }
+        else if (checkSameDay(gameSessionList[index].started_at, gameSessionList[index + 1].started_at)) {
+            return
+        }
+        else {
+            if(count > max) { max = count }
+            count = 1
+        }
+
+    })
+
+    if(count > max) { max = count }
+
+    console.log("Consecutive Days Required : " + achievement.games_played_consecutive_days + "\nPlayer's Consecutive Days : " + max)
+    console.log(max >= achievement.games_played_consecutive_days!)
+
+    return max >= achievement.games_played_consecutive_days!
     // TODO
 }
 
