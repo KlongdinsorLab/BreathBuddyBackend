@@ -11,9 +11,9 @@ console.log("Hello from Functions!!!")
 
 Deno.serve(async (req) => {
 
-  const test = await db.select().from(playersTable);
+  // const test = await db.select().from(playersTable);
   const data = {
-    message: test,
+    message: "Hello",
   }
 
   return new Response(
