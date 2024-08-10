@@ -3,24 +3,24 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-// import "https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"
-// import { db } from "../common/db.ts";
-// import { usersTable } from "../common/schema.ts";
+import "https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"
+import { db } from "../common/db.ts";
+import { playersTable } from "../common/schema.ts";
 
-// console.log("Hello from Functions!!!")
+console.log("Hello from Functions!!!")
 
-// Deno.serve(async (req) => {
+Deno.serve(async (req) => {
 
-//   //const test = db.select().from(usersTable);
-//   const data = {
-//     message: `Hello People!`,
-//   }
+  const test = await db.select().from(playersTable);
+  const data = {
+    message: test,
+  }
 
-//   return new Response(
-//     JSON.stringify(data),
-//     { headers: { "Content-Type": "application/json" } },
-//   )
-// })
+  return new Response(
+    JSON.stringify(data),
+    { headers: { "Content-Type": "application/json" } },
+  )
+})
 
 /* To invoke locally:
 
