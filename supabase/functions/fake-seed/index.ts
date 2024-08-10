@@ -13,24 +13,24 @@ Deno.serve(async (_req) => {
   try{await addCharacters()}
   catch(e){console.log(e.message)}
 
-  // try{await addDifficulties()}
-  // catch(e){console.log(e.message)}
+  try{await addDifficulties()}
+  catch(e){console.log(e.message)}
 
-  // try{await addBosses()}
-  // catch(e){console.log(e.message)}
+  try{await addBosses()}
+  catch(e){console.log(e.message)}
 
-  // try{await addBoosters()}
-  // catch(e){console.log(e.message)}
+  try{await addBoosters()}
+  catch(e){console.log(e.message)}
 
-  // try{await addAchievements()}
-  // catch(e){console.log(e.message)}
+  try{await addAchievements()}
+  catch(e){console.log(e.message)}
   
   const data = {
-    // characters : await db.select().from(charactersTable),
-    // difficulties : await db.select().from(difficultiesTable),
-    // bosses : await db.select().from(bossesTable),
-    // boosters : await db.select().from(boostersTable),
-    // achievements : await db.select().from(achievementsTable)
+    characters : await db.select().from(charactersTable),
+    difficulties : await db.select().from(difficultiesTable),
+    bosses : await db.select().from(bossesTable),
+    boosters : await db.select().from(boostersTable),
+    achievements : await db.select().from(achievementsTable)
   }
 
   return new Response(
