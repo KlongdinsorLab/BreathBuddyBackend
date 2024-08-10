@@ -4,7 +4,7 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { getFirebaseId, login } from "../common/_shared/authService.ts";
+import { getFirebaseId, getPhoneNumber, login } from "../common/_shared/authService.ts";
 
 console.log("Hello from Functions!")
 
@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization")!
     const firebaseId = getFirebaseId(authHeader)
 
-    if(phoneNumber !== phoneNumber(authHeader)) {
+    if(phoneNumber !== getPhoneNumber(authHeader)) {
       throw new Error("Authentication Error")
     }
   
