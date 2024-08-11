@@ -179,6 +179,12 @@ const seed = async () => {
                     name: "จอมโจร",
                     detail: "สมบัติของเธอ ขอรับไปละนะ",
                     achievement_number_required: 8
+               },
+               {
+                    id: 4,
+                    name: "มือปราบ",
+                    detail: "ด้วยอำนาจเจ้าหน้าที่ตำรวจสากล ขอใช้กำลังเช้าจับกุม",
+                    achievement_number_required: 12
                }
           ])
           console.log("Seed Characters Done")
