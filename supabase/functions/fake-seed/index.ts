@@ -4,7 +4,7 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { achievementsTable, boostersTable, bossesTable, charactersTable, difficultiesTable } from "../common/schema.ts";
+import { achievementsTable, boostersTable, bossesTable, charactersTable, difficultiesTable, levelsTable } from "../common/schema.ts";
 import { db } from "../common/db.ts";
 
 console.log("Hello from Functions!")
@@ -23,6 +23,9 @@ Deno.serve(async (_req) => {
   catch(e){console.log(e.message)}
 
   try{await addAchievements()}
+  catch(e){console.log(e.message)}
+
+  try{await addLevels()}
   catch(e){console.log(e.message)}
   
   const data = {
@@ -245,6 +248,61 @@ async function addAchievements(){
       id: 17,
       name: "4mc",
       characters_unlocked: 4
+    },
+  ])
+}
+
+async function addLevels(){
+  await db.insert(levelsTable).values([
+    {
+         id: 1,
+         level: 1,
+         score_required: 0,
+    },
+    {
+         id: 2,
+         level: 2,
+         score_required: 85000,
+    },
+    {
+         id: 3,
+         level: 3,
+         score_required: 850000,
+    },
+    {
+         id: 4,
+         level: 4,
+         score_required: 2125000,
+    },
+    {
+         id: 5,
+         level: 5,
+         score_required: 3825000,
+    },
+    {
+         id: 6,
+         level: 6,
+         score_required: 5190000,
+    },
+    {
+         id: 7,
+         level: 7,
+         score_required: 10200000,
+    },
+    {
+         id: 8,
+         level: 8,
+         score_required: 15300000,
+    },
+    {
+         id: 9,
+         level: 9,
+         score_required: 21250000,
+    },
+    {
+         id: 10,
+         level: 10,
+         score_required: 28050000,
     },
   ])
 }
