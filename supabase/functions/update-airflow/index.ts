@@ -10,10 +10,14 @@ import { playersTable } from "../common/schema.ts";
 import { eq } from "npm:drizzle-orm@^0.31.4/expressions";
 import { takeUniqueOrThrow } from "../common/_shared/takeUniqueOrThrow.ts";
 import { updateAirflow } from "../common/_shared/playerService.ts";
+import { corsHeaders } from "../common/_shared/cors.ts";
 
 console.log("Hello from Functions!")
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
   try{
     const { airflow } = await req.json()
     const authHeader = req.headers.get("Authorization")!
@@ -26,7 +30,7 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify(response),
-      { headers: { "Content-Type": "application/json" } },
+      { headers: { ...corsHeaders,"Content-Type": "application/json" } },
     )
   }
   catch(e){
@@ -34,7 +38,7 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify(response),
-      { headers: { "Content-Type": "application/json" } },
+      { headers: { ...corsHeaders,"Content-Type": "application/json" } },
     )
   }
 })

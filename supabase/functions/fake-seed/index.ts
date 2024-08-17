@@ -6,10 +6,16 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { achievementsTable, boostersTable, bossesTable, charactersTable, difficultiesTable, levelsTable } from "../common/schema.ts";
 import { db } from "../common/db.ts";
+import { corsHeaders } from "../common/_shared/cors.ts";
+
 
 console.log("Hello from Functions!")
 
-Deno.serve(async (_req) => {
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   try{await addCharacters()}
   catch(e){console.log(e.message)}
 
@@ -38,7 +44,7 @@ Deno.serve(async (_req) => {
 
   return new Response(
     JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
+    { headers: { ...corsHeaders,"Content-Type": "application/json" } },
   )
 })
 

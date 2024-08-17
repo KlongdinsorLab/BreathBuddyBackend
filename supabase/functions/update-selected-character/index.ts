@@ -10,10 +10,15 @@ import { updateSelectedCharacter } from "../common/_shared/playerService.ts";
 import { takeUniqueOrThrow } from "../common/_shared/takeUniqueOrThrow.ts";
 import { db } from "../common/db.ts";
 import { playersTable } from "../common/schema.ts";
+import { corsHeaders } from "../common/_shared/cors.ts";
 
 console.log("Hello from Functions!")
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   try{
     const { character_id } = await req.json()
     const authHeader = req.headers.get("Authorization")!
@@ -26,7 +31,7 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify(response),
-      { headers: { "Content-Type": "application/json" } },
+      { headers: { ...corsHeaders,"Content-Type": "application/json" } },
     )
   }
   catch(e){
@@ -34,7 +39,7 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify(response),
-      { headers: { "Content-Type": "application/json" } },
+      { headers: { ...corsHeaders,"Content-Type": "application/json" } },
     )
   }
 })
