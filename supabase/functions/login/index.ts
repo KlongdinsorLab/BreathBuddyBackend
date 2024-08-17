@@ -5,10 +5,15 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { getFirebaseId, getPhoneNumber, login } from "../common/_shared/authService.ts";
+import { corsHeaders } from "../common/_shared/cors.ts";
 
 console.log("Hello from Functions!")
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   try{
     const { phoneNumber } = await req.json()
     const authHeader = req.headers.get("Authorization")!
@@ -26,7 +31,7 @@ Deno.serve(async (req) => {
     }
     return new Response(
       JSON.stringify(response),
-      { headers: { "Content-Type": "application/json" } },
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     )
   }
   catch(error){
@@ -35,7 +40,7 @@ Deno.serve(async (req) => {
     }
     return new Response(
       JSON.stringify(response),
-      { headers: { "Content-Type": "application/json" } },
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     )
   }
   
