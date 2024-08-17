@@ -5,6 +5,8 @@ import { getCurrentDifficulty } from "./playerService.ts";
 
 export async function startGame(playerId : number){
     // TODO random boss and booster
+
+    await cancelGame(playerId) // cancel currently active game(s)
     const currentDifficultyId = await getCurrentDifficulty(playerId)
 
     await db.insert(gameSessionsTable).values({
