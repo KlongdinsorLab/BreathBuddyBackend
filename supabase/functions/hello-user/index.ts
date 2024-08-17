@@ -6,11 +6,15 @@
 import "https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"
 import { db } from "../common/db.ts";
 import { playersTable } from "../common/schema.ts";
+import { corsHeaders } from "../common/_shared/cors.ts";
 
 console.log("Hello from Functions!!!")
 
 Deno.serve(async (req) => {
 
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
   // const test = await db.select().from(playersTable);
   const data = {
     message: "Hello",
@@ -18,7 +22,7 @@ Deno.serve(async (req) => {
 
   return new Response(
     JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
   )
 })
 
