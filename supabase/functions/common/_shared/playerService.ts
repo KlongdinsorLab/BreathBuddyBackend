@@ -37,6 +37,12 @@ export async function updateSelectedCharacter(playerId : number, characterId : n
     await db.update(playersTable).set({selected_character_id : characterId}).where(eq(playersTable.id,playerId))
 }
 
+export async function getCurrentDifficulty(playerId : number) {
+    const {difficultyId} = await db.select({difficultyId : playersTable.difficulty_id}).from(playersTable).where(eq(playersTable.id,playerId)).then(takeUniqueOrThrow)
+
+    return difficultyId
+}
+
 export async function getLevel(playerId : number) {
     const allGameSessions = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id,playerId))
 
