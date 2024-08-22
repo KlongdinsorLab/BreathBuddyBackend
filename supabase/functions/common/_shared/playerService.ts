@@ -43,18 +43,6 @@ export async function getCurrentDifficulty(playerId : number) {
     return difficultyId
 }
 
-export async function getLevel(playerId : number) {
-    const allGameSessions = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id,playerId))
-
-    let totalScore = 0
-    allGameSessions.forEach((gameSession) => {
-        totalScore = totalScore + (gameSession.score === null ? 0 : gameSession.score)
-    })
-
-    const level = await db.select().from(levelsTable).where(lt(levelsTable.score_required,totalScore)).orderBy(desc(levelsTable.score_required))
-    return level[0].level
-}
-
 export async function unlockCharacter(playerId : number, characterId : number){
     const achievementsList = await db.select().from(playersAchievementsTable).where(eq(playersAchievementsTable.player_id,playerId))
     const achievementsNumber = achievementsList.length

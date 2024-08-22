@@ -1,7 +1,12 @@
-import { and, eq } from "npm:drizzle-orm@^0.31.4/expressions";
+import { and, eq, lt, desc } from "npm:drizzle-orm@^0.31.4/expressions";
 import { db } from "../db.ts";
-import { gameSessionsTable } from "../schema.ts";
+import { gameSessionsTable, levelsTable } from "../schema.ts";
 import { getCurrentDifficulty } from "./playerService.ts";
+import { checkSameDay, getNewAchivements } from "./achievementsService.ts";
+import { gameSessionInterface } from "./interfaces.ts";
+import { getLevelByScore } from "./levelService.ts";
+import { playersBoostersTable } from "../schema.ts";
+import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
 
 export async function startGame(playerId : number){
     // TODO random boss and booster
@@ -41,4 +46,82 @@ export async function updateGame(playerId : number, score : number, lap : number
     )).returning()
 
     if(updatedGame.length === 0) throw new Error("No Currently Active Game to Update")
+}
+
+export async function finishGame(playerId : number, score : number, lap : number, isBoosterReceived : boolean) {
+
+    if (lap !== 10) throw new Error("Incorrect Lap")
+    
+    let boosterDropId : number = 0
+    const now = new Date()
+    await db.transaction(async (tx) => {
+        const game = await tx.update(gameSessionsTable).set({
+            lap : lap,
+            score : score,
+            updated_at: now,
+            ended_at: now,
+            status : "END"
+        }).where(and(
+            eq(gameSessionsTable.player_id,playerId),
+            eq(gameSessionsTable.status,"ACTIVE")
+        )).returning().then(takeUniqueOrThrow)
+        console.log(game)
+        if(isBoosterReceived) {
+            await tx.insert(playersBoostersTable).values({
+                player_id : playerId,
+                booster_id : game.booster_drop_id,
+                status : "ACTIVE"
+            })
+        }
+        boosterDropId = game.booster_drop_id
+    })
+
+    const newAchievements = await getNewAchivements(playerId)
+    const totalGames = getTotalGames(playerId)
+    const gamesPlayedToday = getGamesPlayedToday(playerId)
+
+    // get level
+    const allGameSessions = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id,playerId))
+
+    let totalScore = 0
+    allGameSessions.forEach((gameSession) => {
+        totalScore = totalScore + (gameSession.score === null ? 0 : gameSession.score)
+    })
+
+    const level = await db.select().from(levelsTable).where(lt(levelsTable.score_required,totalScore)).orderBy(desc(levelsTable.score_required))
+    const newLevel = level[0]
+    const oldLevel = await getLevelByScore(totalScore - score)
+    const isLevelUp : boolean = newLevel === oldLevel
+
+    return {
+        new_achievements : newAchievements,
+        total_games : totalGames,
+        games_played_today : gamesPlayedToday,
+        level_up : isLevelUp,
+        level : newLevel,
+        booster : isBoosterReceived ? boosterDropId : null
+    }
+}
+
+export async function getTotalGames(playerId : number){
+    const allGames = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id,playerId))
+    return allGames.length
+}
+
+export async function getGamesPlayedToday(playerId : number) {
+    const allGames = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id,playerId)).orderBy(gameSessionsTable.started_at)
+    const now = new Date()
+    const gamesPlayedToday : gameSessionInterface[] = []
+
+    allGames.forEach((gameSession) => {
+
+        const isSameDay = checkSameDay(now,gameSession.started_at)
+        
+        if(isSameDay) {
+            gamesPlayedToday.push(gameSession)
+        }
+        else return
+    })
+
+    return gamesPlayedToday
 }
