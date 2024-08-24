@@ -183,7 +183,7 @@ export async function getAllAchievements() {
 }
 
 export async function getNewAchivements(playerId : number) { // Call this
-    const lockedAchievements = await getAllAchievements() // TODO change to getLockedAchievements 
+    const lockedAchievements = await getLockedAchievements(playerId)
     const gameSessionList = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id, playerId)).orderBy(gameSessionsTable.started_at)
     const playersCharactersList = await db.select().from(playersCharactersTable).where(eq(playersCharactersTable.player_id,playerId))
     const playersBoostersList = await db.select({
@@ -202,8 +202,16 @@ export async function getNewAchivements(playerId : number) { // Call this
     // lockedAchievements.forEach(async (element) => {
     //     await checkAchievement(playerId, element, gameSessionList, playersCharactersList,playersBoostersList)
     // })
+    const newAchievements = []
 
-    for(let i = 0;i < lockedAchievements.length;i++) await checkAchievement(playerId, lockedAchievements[i],gameSessionList,playersCharactersList,playersBoostersList)
+    for(let i = 0;i < lockedAchievements.length;i++) {
+        const isUnlocked = await checkAchievement(playerId, lockedAchievements[i],gameSessionList,playersCharactersList,playersBoostersList)
+        if(isUnlocked) {
+            newAchievements.push(lockedAchievements[i])
+        }
+    }
+
+    return newAchievements
 
 }
 
@@ -246,6 +254,7 @@ export async function checkAchievement(
     
 
     if(unlock) await unlockAchievement(playerId,achievement.id) 
+    return unlock
 }
 
 export async function unlockAchievement (playerId: number, achievementId: number){
