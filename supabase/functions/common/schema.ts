@@ -34,7 +34,7 @@ export const playersTable = pgTable('players_table', {
   birth_year: integer('birth_year'),
   airflow: integer('airflow'),
   last_played_at: timestamp('last_played_at'),
-  
+  total_score: integer('total_score').notNull().default(0)
 })
 
 export const vasTable = pgTable('vas_table', {
@@ -48,7 +48,18 @@ export const vasTable = pgTable('vas_table', {
 export const levelsTable = pgTable('levels_table', {
   id: serial('id').primaryKey(),
   level: integer('level').notNull().unique(),
-  score_required: integer('score_required').notNull()
+  score_required: integer('score_required').notNull(),
+  boss_id: integer('boss_id')
+  .references(() => bossesTable.id, { onDelete: 'no action' }),
+  booster_id_1:  integer('booster_id_1')
+  .references(() => boostersTable.id, { onDelete: 'no action' }),
+  booster_id_2:  integer('booster_id_2')
+  .references(() => boostersTable.id, { onDelete: 'no action' }),
+  booster_id_3:  integer('booster_id_3')
+  .references(() => boostersTable.id, { onDelete: 'no action' }),
+  booster_amount_1: integer('booster_amount_1').default(0),
+  booster_amount_2: integer('booster_amount_2').default(0),
+  booster_amount_3: integer('booster_amount_3').default(0),
 })
 
 export const gameSessionsTable = pgTable('game_sessions_table', {
