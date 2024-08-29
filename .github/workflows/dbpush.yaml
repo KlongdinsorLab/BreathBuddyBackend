@@ -3,7 +3,7 @@ name: dbpush
 on:
   push:
     branches:
-      - seeding-workflow
+      - develop
   workflow_dispatch:
 
 jobs:
