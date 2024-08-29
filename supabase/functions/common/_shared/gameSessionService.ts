@@ -103,8 +103,8 @@ export async function finishGame(
   });
 
   const newAchievements = await getNewAchievements(playerId);
-  const totalGames = getTotalGames(playerId);
-  const gamesPlayedToday = getGamesPlayedToday(playerId);
+  const totalGames = await getTotalGames(playerId);
+  const gamesPlayedToday = await getGamesPlayedToday(playerId);
 
   const level = await db
     .select()
