@@ -12,7 +12,7 @@ import { config } from "https://deno.land/x/dotenv@v3.2.0/mod.ts";
 
 const env = config();
 
-const test : string = env.SUPABASE_PROJECT_ID
+const test : string = Deno.env.get("SUPABASE_PROJECT_ID") as string
 if(!test) {
   throw new Error("Cannot find .env")
 }
