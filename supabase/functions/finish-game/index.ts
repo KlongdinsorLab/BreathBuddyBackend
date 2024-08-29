@@ -24,8 +24,9 @@ Deno.serve(async (req) => {
     const firebaseId = getFirebaseId(authHeader)
     const player = await db.select().from(playersTable).where(eq(playersTable.firebase_id, firebaseId)).then(takeUniqueOrThrow)
     const playerId = player.id
+    const playerTotalScore = player.total_score
 
-    const result = await finishGame(playerId,score,lap,is_booster_received)
+    const result = await finishGame(playerId, score, playerTotalScore, lap, is_booster_received)
   
     const response = {message : "Ok", 
       response : result
@@ -33,16 +34,16 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify(response),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      {status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     )
   }
   catch(error){
     const response = {
-      message : error.message,
+      error : error.message,
     }
     return new Response(
       JSON.stringify(response),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      {status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     )
   }
 })

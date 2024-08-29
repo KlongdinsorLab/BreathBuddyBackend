@@ -43,6 +43,20 @@
       "when": 1722326453263,
       "tag": "0005_wooden_diamondback",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1724480063464,
+      "tag": "0006_exotic_shooting_star",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1724493612148,
+      "tag": "0007_optimal_ink",
+      "breakpoints": true
     }
   ]
 }

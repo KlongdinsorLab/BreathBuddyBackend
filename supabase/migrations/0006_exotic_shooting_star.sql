@@ -1,0 +1,1 @@
+ALTER TABLE "players_table" ADD COLUMN "total_score" integer;
