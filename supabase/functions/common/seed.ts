@@ -12,7 +12,7 @@ import { config } from "https://deno.land/x/dotenv@v3.2.0/mod.ts";
 
 const env = config();
 
-const connectionString: string = env.SUPABASE_DB_URL;
+const connectionString: string = env.DATABASE_URL;
 
 if (!connectionString) {
   throw new Error("DB_URL is not defined in the .env file");
