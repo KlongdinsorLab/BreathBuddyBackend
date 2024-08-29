@@ -27,4 +27,4 @@ jobs:
 
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
       - run: supabase db push
-      - run: deno run --allow-read ./supabase/functions/common/seed.ts 
+      - run: deno run --allow-read --allow-env ./supabase/functions/common/seed.ts 
