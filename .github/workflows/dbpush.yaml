@@ -3,7 +3,7 @@ name: dbpush
 on:
   push:
     branches:
-      - develop
+      - seeding-workflow
   workflow_dispatch:
 
 jobs:
@@ -20,6 +20,10 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
 
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
       - run: supabase db push
