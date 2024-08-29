@@ -20,10 +20,6 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
           
       - run: supabase link --project-ref $PROJECT_ID
       - run: supabase functions deploy --no-verify-jwt
