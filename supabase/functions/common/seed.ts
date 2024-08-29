@@ -12,6 +12,11 @@ import { config } from "https://deno.land/x/dotenv@v3.2.0/mod.ts";
 
 const env = config();
 
+const test : string = env.SUPABASE_PROJECT_ID
+if(!test) {
+  throw new Error("Cannot find .env")
+}
+
 const connectionString: string = env.DATABASE_URL;
 
 if (!connectionString) {
