@@ -8,16 +8,11 @@ import {
 } from "./schema.ts";
 import postgres from "npm:postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { config } from "https://deno.land/x/dotenv@v3.2.0/mod.ts";
+// import { config } from "https://deno.land/x/dotenv@v3.2.0/mod.ts";
 
-const env = config();
+// const env = config();
 
-const test : string = Deno.env.get("SUPABASE_PROJECT_ID") as string
-if(!test) {
-  throw new Error("Cannot find .env")
-}
-
-const connectionString: string = env.DATABASE_URL;
+const connectionString: string = Deno.env.get("DATABASE_URL") as string;
 
 if (!connectionString) {
   throw new Error("DB_URL is not defined in the .env file");
