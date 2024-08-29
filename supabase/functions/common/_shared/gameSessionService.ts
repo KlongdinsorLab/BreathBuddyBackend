@@ -1,4 +1,4 @@
-import { and, eq, lt, desc } from "npm:drizzle-orm@^0.31.4/expressions";
+import { and, eq, lte, desc } from "npm:drizzle-orm@^0.31.4/expressions";
 import { db } from "../db.ts";
 import { gameSessionsTable, levelsTable, playersTable } from "../schema.ts";
 import { getCurrentDifficulty } from "./playerService.ts";
@@ -109,9 +109,11 @@ export async function finishGame(
   const level = await db
     .select()
     .from(levelsTable)
-    .where(lt(levelsTable.score_required, playerTotalScore + score))
+    .where(lte(levelsTable.score_required, playerTotalScore + score))
     .orderBy(desc(levelsTable.score_required));
+  console.log("Game Session Service : " + level[0])
   const newLevel = level[0];
+  
   const oldLevel = await getLevelByScore(playerTotalScore);
   const isLevelUp: boolean = newLevel.level !== oldLevel.level;
 
