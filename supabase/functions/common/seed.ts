@@ -17,7 +17,7 @@ const projectId: string = Deno.env.get("SUPABASE_PROJECT_ID") as string
 // const databasePassword: string = Deno.env.get("SUPABASE_DB_PASSWORD") as string
 const databasePassword = "Fakepassword"
 
-const connectionString: string = "postgresql://postgres.dtfbxtfpdfpwflcjxttr:" + databasePassword + "@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres"
+const connectionString: string = `postgresql://postgres.dtfbxtfpdfpwflcjxttr:${databasePassword}@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres`
 
 
 if (projectId.length === 0) {
