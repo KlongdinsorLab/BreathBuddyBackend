@@ -63,7 +63,7 @@ const seed = async () => {
     console.log("Seed Bosses Done");
   } catch (error) {
     console.log("BossesTable: ", error);
-    console.log(projectId)
+    console.log(connectionString)
   }
 
   // seeding boosters Table
