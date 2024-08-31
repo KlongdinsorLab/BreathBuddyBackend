@@ -8,17 +8,17 @@ import {
 } from "./schema.ts";
 import postgres from "npm:postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { config } from "https://deno.land/x/dotenv@v3.2.0/mod.ts";
+// import { config } from "https://deno.land/x/dotenv@v3.2.0/mod.ts";
 
-const env = config();
+// const env = config();
 
-const projectId: string = env.SUPABASE_PROJECT_ID
+const projectId: string = Deno.env.get("SUPABASE_PROJECT_ID") as string
 
-const databasePassword: string = env.SUPABASE_DB_PASSWORD
+const databasePassword: string = Deno.env.get("SUPABASE_DB_PASSWORD") as string
 
 const connectionString: string = "postgresql://postgres." + projectId + ":" + databasePassword + "@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres"
 
-if (!projectId) {
+if (projectId.length === 0) {
   throw new Error("PROJECT_ID is not defined in the .env file");
 }
 if (!databasePassword) {
