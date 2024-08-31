@@ -4,7 +4,7 @@ import { boostersTable, gameSessionsTable, levelsTable, playersTable } from "../
 import { getCurrentDifficulty } from "./playerService.ts";
 import { checkSameDay, getNewAchivements as getNewAchievements } from "./achievementsService.ts";
 import { gameSessionInterface } from "./interfaces.ts";
-import { getLevelByPlayer, getLevelByScore } from "./levelService.ts";
+import { getLevelByScore } from "./levelService.ts";
 import { playersBoostersTable } from "../schema.ts";
 import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
 
