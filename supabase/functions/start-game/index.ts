@@ -19,12 +19,14 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
   try{
+    const body = await req.json()
     const authHeader = req.headers.get("Authorization")!
     const firebaseId = getFirebaseId(authHeader)
     const player = await db.select().from(playersTable).where(eq(playersTable.firebase_id, firebaseId)).then(takeUniqueOrThrow)
     const playerId = player.id
 
-    await startGame(playerId)
+    if(body.player_booster_id === 0) await startGame(playerId)
+    else await startGame(playerId,body.player_booster_id)
   
     const response = {message : "Ok"}
 
