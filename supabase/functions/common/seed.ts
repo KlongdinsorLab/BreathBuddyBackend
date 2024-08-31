@@ -17,6 +17,7 @@ const databasePassword: string = Deno.env.get("SUPABASE_DB_PASSWORD") as string
 
 const connectionString: string = "postgresql://postgres." + projectId + ":" + databasePassword + "@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres"
 
+
 if (!connectionString) {
   throw new Error("DB_URL is not defined in the .env file");
 }
