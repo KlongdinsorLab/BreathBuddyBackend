@@ -13,6 +13,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 // const env = config();
 
 const projectId: string = Deno.env.get("SUPABASE_PROJECT_ID") as string
+throw new Error(projectId)
 
 // const databasePassword: string = Deno.env.get("SUPABASE_DB_PASSWORD") as string
 const databasePassword = "Fakepassword"
