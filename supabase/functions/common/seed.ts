@@ -14,8 +14,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 
 const projectId: string = Deno.env.get("SUPABASE_PROJECT_ID") as string
 
-// const databasePassword: string = Deno.env.get("SUPABASE_DB_PASSWORD") as string
-const databasePassword = "Fakepassword"
+const databasePassword: string = Deno.env.get("SUPABASE_DB_PASSWORD") as string
 
 const connectionString: string = `postgresql://postgres.dtfbxtfpdfpwflcjxttr:${databasePassword}@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres`
 
@@ -63,7 +62,6 @@ const seed = async () => {
     console.log("Seed Bosses Done");
   } catch (error) {
     console.log("BossesTable: ", error);
-    console.log("postgresql://postgres.dtfbxtfpdfpwflcjxttr:")
   }
 
   // seeding boosters Table
