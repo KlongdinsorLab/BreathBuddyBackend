@@ -63,7 +63,7 @@ const seed = async () => {
     console.log("Seed Bosses Done");
   } catch (error) {
     console.log("BossesTable: ", error);
-    console.log(connectionString)
+    console.log("postgresql://postgres.dtfbxtfpdfpwflcjxttr:")
   }
 
   // seeding boosters Table
