@@ -12,7 +12,10 @@ import { drizzle } from "drizzle-orm/postgres-js";
 
 // const env = config();
 
-const connectionString: string = Deno.env.get("DATABASE_URL") as string;
+const projectId: string = Deno.env.get("SUPABASE_PROJECT_ID") as string
+const databasePassword: string = Deno.env.get("SUPABASE_DB_PASSWORD") as string
+
+const connectionString: string = "postgresql://postgres." + projectId + ":" + databasePassword + "@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres"
 
 if (!connectionString) {
   throw new Error("DB_URL is not defined in the .env file");
