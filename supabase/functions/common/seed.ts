@@ -12,7 +12,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 
 // const env = config();
 
-const connectionString: string = Deno.env.get("SUPABASE_DATABASE_URL") as string;
+const connectionString: string = Deno.env.get("DATABASE_URL") as string;
 
 if (!connectionString) {
   throw new Error("DB_URL is not defined in the .env file");
