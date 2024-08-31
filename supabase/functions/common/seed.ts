@@ -13,7 +13,6 @@ import { drizzle } from "drizzle-orm/postgres-js";
 // const env = config();
 
 const projectId: string = Deno.env.get("SUPABASE_PROJECT_ID") as string
-throw new Error(projectId)
 
 // const databasePassword: string = Deno.env.get("SUPABASE_DB_PASSWORD") as string
 const databasePassword = "Fakepassword"
@@ -64,6 +63,7 @@ const seed = async () => {
     console.log("Seed Bosses Done");
   } catch (error) {
     console.log("BossesTable: ", error);
+    console.log(projectId)
   }
 
   // seeding boosters Table
