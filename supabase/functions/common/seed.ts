@@ -18,6 +18,8 @@ const databasePassword: string = Deno.env.get("SUPABASE_DB_PASSWORD") as string
 
 const connectionString: string = `postgresql://postgres.dtfbxtfpdfpwflcjxttr:${databasePassword}@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres`
 
+const test: string = Deno.env.get("TEST") as string
+
 
 if (projectId.length === 0) {
   throw new Error("PROJECT_ID is not defined in the .env file");
@@ -61,6 +63,7 @@ const seed = async () => {
     ]);
     console.log("Seed Bosses Done");
   } catch (error) {
+    console.log(test)
     console.log("BossesTable: ", error);
   }
 
