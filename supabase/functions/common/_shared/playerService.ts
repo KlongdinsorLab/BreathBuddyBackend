@@ -1,6 +1,6 @@
 import { and, desc, eq, lt } from "npm:drizzle-orm@^0.31.4/expressions";
 import { db } from "../db.ts";
-import { charactersTable, gameSessionsTable, levelsTable, playersAchievementsTable, playersCharactersTable, playersTable } from "../schema.ts";
+import { charactersTable, playersAchievementsTable, playersCharactersTable, playersTable } from "../schema.ts";
 import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
 import { getLevelByScore } from "./levelService.ts"
 import { getLastTwoGames } from "./gameSessionService.ts";
@@ -78,8 +78,8 @@ export async function getPlayer(playerId : number){
         selected_character_id : player.selected_character_id,
         username : player.username,
         level : playerLevel,
-        last_played_1 : lastTwoGames.last_played_game_1.started_at,
-        last_played_2 : lastTwoGames.last_played_game_2.started_at
+        last_played_1 : lastTwoGames.last_played_game_1 === null ? null : lastTwoGames.last_played_game_1.started_at,
+        last_played_2 : lastTwoGames.last_played_game_2 === null ? null : lastTwoGames.last_played_game_2.started_at
     }
 }
 

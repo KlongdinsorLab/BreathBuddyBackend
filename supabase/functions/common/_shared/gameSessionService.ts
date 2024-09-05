@@ -166,7 +166,7 @@ export async function getGamesPlayedToday(playerId: number) {
 
 export async function getLastTwoGames(playerId : number) {
   const gameSessions = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id,playerId)).orderBy(desc(gameSessionsTable.started_at))
-  return {last_played_game_1 : gameSessions[0],
-    last_played_game_2 : gameSessions[1]
+  return {last_played_game_1 : gameSessions[0] ?? null,
+    last_played_game_2 : gameSessions[1] ?? null
   }
 }
