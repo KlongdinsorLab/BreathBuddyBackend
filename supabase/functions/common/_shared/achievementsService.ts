@@ -168,7 +168,21 @@ export async function getUnlockedAchievements (playerId: number) { // for My Bag
     const achievements = await db.select({
         id: achievementsTable.id,
         name: achievementsTable.name,
-        detail: achievementsTable.detail
+        detail: achievementsTable.detail,
+        games_played_in_a_day: achievementsTable.games_played_in_a_day,
+        games_played_consecutive_days: achievementsTable.games_played_consecutive_days,
+        accumulative_score: achievementsTable.accumulative_score,
+        games_played: achievementsTable.games_played,
+        boosters_number: achievementsTable.boosters_number, 
+        booster_type: achievementsTable.booster_type,
+
+        booster_action: achievementsTable.booster_action,
+        booster_unique: achievementsTable.booster_unique,
+
+        boss_id: achievementsTable.boss_id,
+
+        boss_encounter: achievementsTable.boss_encounter,
+        characters_unlocked: achievementsTable.characters_unlocked,
     }).from(achievementsTable)
     .innerJoin(playersAchievementsTable, eq(playersAchievementsTable.achievement_id, achievementsTable.id))
     .where(eq(playersAchievementsTable.player_id, playerId))
