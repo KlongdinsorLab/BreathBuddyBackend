@@ -64,3 +64,12 @@ export async function getUnlockedCharacters(playerId : number) {
 
     return unlockedCharacters
 }
+
+export async function getRanking() {
+    const ranking = await db.select({
+        username : playersTable.username,
+        total_score : playersTable.total_score
+    }).from(playersTable).orderBy(desc(playersTable.total_score))
+
+    return ranking
+}
