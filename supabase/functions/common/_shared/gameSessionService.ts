@@ -1,6 +1,6 @@
-import { and, eq, lte, desc } from "npm:drizzle-orm@^0.31.4/expressions";
+import { and, eq, lte, desc, isNotNull } from "npm:drizzle-orm@^0.31.4/expressions";
 import { db } from "../db.ts";
-import { gameSessionsTable, levelsTable, playersTable } from "../schema.ts";
+import { boostersTable, gameSessionsTable, levelsTable, playersTable } from "../schema.ts";
 import { getCurrentDifficulty } from "./playerService.ts";
 import { checkSameDay, getNewAchivements as getNewAchievements } from "./achievementsService.ts";
 import { gameSessionInterface } from "./interfaces.ts";
@@ -8,21 +8,40 @@ import { getLevelByScore } from "./levelService.ts";
 import { playersBoostersTable } from "../schema.ts";
 import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
 
-export async function startGame(playerId: number) {
-  // TODO random boss and booster
 
+export async function startGame(playerId: number, playerBoosterId?: number) {
   await cancelGame(playerId); // cancel currently active game(s)
   const currentDifficultyId = await getCurrentDifficulty(playerId);
+  const boosterDrop = await getRandomBooster()
+  const bossId = await getRandomBoss(playerId)
 
-  await db.insert(gameSessionsTable).values({
-    player_id: playerId,
-    difficulty_id: currentDifficultyId,
-    boss_id: 1,
-    booster_drop_id: 1,
-    score: 0,
-    lap: 1,
-    status: "ACTIVE",
-  });
+  // TODO check booster expire date
+  if(playerBoosterId){
+    const targetBooster = await db.select().from(playersBoostersTable).where(and(
+      eq(playersBoostersTable.id,playerBoosterId),
+      eq(playersBoostersTable.status,"ACTIVE")
+    ))
+
+    if(targetBooster.length === 0) throw new Error("No booster to consume or booster is already used")
+  }
+  
+
+  await db.transaction(async (tx) => {
+    if(playerBoosterId) {
+      await tx.update(playersBoostersTable).set({status:"USED"}).where(eq(playersBoostersTable.id,playerBoosterId)).returning()
+    }
+    await tx.insert(gameSessionsTable).values({
+      player_id: playerId,
+      difficulty_id: currentDifficultyId,
+      boss_id: bossId,
+      booster_drop_id: boosterDrop.id,
+      booster_drop_duration: boosterDrop.duration === 0 ? null : boosterDrop.duration,
+      score: 0,
+      lap: 1,
+      status: "ACTIVE",
+    });
+  })
+  
 }
 
 export async function cancelGame(playerId: number) {
@@ -162,4 +181,48 @@ export async function getGamesPlayedToday(playerId: number) {
   });
 
   return gamesPlayedToday;
+}
+
+
+export async function getLastTwoGames(playerId : number) {
+  const gameSessions = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id,playerId)).orderBy(desc(gameSessionsTable.started_at))
+  return {last_played_game_1 : gameSessions[0] ?? null,
+    last_played_game_2 : gameSessions[1] ?? null
+  }
+}
+
+export async function getRandomBooster(){
+  const allBoosters = await db.select().from(boostersTable).where(eq(boostersTable.type,"NORMAL"))
+  const boosterId =  allBoosters[getRandomInt(allBoosters.length)].id
+  const boosterDuration = boosterDurationRandomPool[getRandomInt(boosterDurationRandomPool.length)]
+  return { id : boosterId, duration : boosterDuration }
+}
+
+export async function getRandomBoss(playerId : number) {
+  const player = await db.select().from(playersTable).where(eq(playersTable.id,playerId)).then(takeUniqueOrThrow)
+  const totalScore = player.total_score
+  const playerLevel = await db.select().from(levelsTable).where(
+    and(
+      lte(levelsTable.level,totalScore),
+      isNotNull(levelsTable.boss_id)
+    )
+  )
+  const bossPoolCount = playerLevel.length 
+  const bossPool = bossRandomPool[bossPoolCount]
+  return bossPool[getRandomInt(bossPool.length)]
+}
+
+export const bossRandomPool = [
+  [1],
+  [1,2],
+  [1,2,3,3],
+  [1,2,3,4,4],
+  [1,2,3,3,4,4,5,5,5,5],
+  [1,2,3,4,4,5,5,6,6,6]
+]
+
+export const boosterDurationRandomPool = [0,0,0,0,0,0,3,6,6,12]
+
+export function getRandomInt(max : number) {
+  return Math.floor(Math.random() * max)
 }
