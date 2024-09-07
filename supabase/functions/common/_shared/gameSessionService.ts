@@ -226,3 +226,51 @@ export const boosterDurationRandomPool = [0,0,0,0,0,0,3,6,6,12]
 export function getRandomInt(max : number) {
   return Math.floor(Math.random() * max)
 }
+
+export async function checkCanceledGame(playerId : number){
+  const now = new Date()
+  const player = await db.select().from(playersTable).where(eq(playersTable.id,playerId)).then(takeUniqueOrThrow)
+
+  await db.transaction(async (tx) => {
+    const canceledGameCheck = await tx.update(gameSessionsTable)
+      .set({
+        status : "CANCEL",
+        ended_at : now
+      })
+      .where(
+        and(
+          eq(gameSessionsTable.player_id, playerId),
+          eq(gameSessionsTable.status, "ACTIVE")
+        )
+      )
+      .returning()
+
+    if(canceledGameCheck.length === 0) return
+
+    const canceledGame = canceledGameCheck[0]
+
+    const newAchievements = await getNewAchievements(playerId);
+  
+    const playerTotalScore = player.total_score
+    const score = canceledGame.score
+    console.log(playerTotalScore)
+    console.log(score)
+    const level = await db
+      .select()
+      .from(levelsTable)
+      .where(lte(levelsTable.score_required, playerTotalScore + score))
+      .orderBy(desc(levelsTable.score_required));
+    console.log("Game Session Service : " + level[0])
+    const newLevel = level[0];
+  
+    const oldLevel = await getLevelByScore(playerTotalScore);
+    const isLevelUp: boolean = newLevel.level !== oldLevel.level;
+
+    await tx
+      .update(playersTable)
+      .set({ total_score: playerTotalScore + score })
+      .where(eq(playersTable.id, playerId))
+      .returning()
+      .then(takeUniqueOrThrow);
+  })
+}
