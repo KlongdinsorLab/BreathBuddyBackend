@@ -17,6 +17,5 @@ export async function getLevelByPlayer(playerId : number) {
 export async function getLevelByScore(score : number) {
     
     const level = await db.select().from(levelsTable).where(lte(levelsTable.score_required,score)).orderBy(desc(levelsTable.score_required))
-    console.log("Level Service : " + level[0])
     return level[0]
 }
