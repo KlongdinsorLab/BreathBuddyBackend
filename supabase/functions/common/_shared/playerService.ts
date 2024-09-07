@@ -67,6 +67,15 @@ export async function getUnlockedCharacters(playerId : number) {
     return unlockedCharacters
 }
 
+export async function getRanking() {
+    const ranking = await db.select({
+        username : playersTable.username,
+        total_score : playersTable.total_score
+    }).from(playersTable).orderBy(desc(playersTable.total_score))
+
+    return ranking
+}
+
 export async function getPlayer(playerId : number){
     const player = await db.select().from(playersTable).where(eq(playersTable.id,playerId)).then(takeUniqueOrThrow)
     const playerLevel = await getLevelByScore(player.total_score)
@@ -82,4 +91,3 @@ export async function getPlayer(playerId : number){
         last_played_2 : lastTwoGames.last_played_game_2 === null ? null : lastTwoGames.last_played_game_2.started_at
     }
 }
-
