@@ -8,6 +8,7 @@ import { getLevelByScore } from "./levelService.ts";
 import { playersBoostersTable } from "../schema.ts";
 import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
 
+
 export async function startGame(playerId: number, playerBoosterId?: number) {
   await cancelGame(playerId); // cancel currently active game(s)
   const currentDifficultyId = await getCurrentDifficulty(playerId);
@@ -188,6 +189,7 @@ export async function getLastTwoGames(playerId : number) {
   return {last_played_game_1 : gameSessions[0] ?? null,
     last_played_game_2 : gameSessions[1] ?? null
   }
+}
 
 export async function getRandomBooster(){
   const allBoosters = await db.select().from(boostersTable).where(eq(boostersTable.type,"NORMAL"))
@@ -221,6 +223,6 @@ export const bossRandomPool = [
 
 export const boosterDurationRandomPool = [0,0,0,0,0,0,3,6,6,12]
 
-function getRandomInt(max : number) {
+export function getRandomInt(max : number) {
   return Math.floor(Math.random() * max)
 }
