@@ -33,18 +33,23 @@ export async function startGame(playerId: number, playerBoosterId?: number) {
         if (playerBoosterId) {
             await tx.update(playersBoostersTable).set({ status: "USED" }).where(eq(playersBoostersTable.id, playerBoosterId)).returning()
         }
-        await tx.insert(gameSessionsTable).values({
-            player_id: playerId,
-            difficulty_id: currentDifficultyId,
-            boss_id: bossId,
-            booster_drop_id: boosterDrop.id,
-            booster_drop_duration: boosterDrop.duration === 0 ? null : boosterDrop.duration,
-            score: 0,
-            lap: 1,
-            status: "ACTIVE",
-        });
-    })
 
+    await tx.insert(gameSessionsTable).values({
+      player_id: playerId,
+      difficulty_id: currentDifficultyId,
+      boss_id: bossId,
+      booster_drop_id: boosterDrop.id,
+      booster_drop_duration: boosterDrop.duration === 0 ? null : boosterDrop.duration,
+      score: 0,
+      lap: 1,
+      status: "ACTIVE",
+    });
+  })
+  return {
+    booster_drop_id : boosterDrop.id,
+    booster_drop_duration : boosterDrop.duration,
+    boss_id : bossId
+  }
 }
 
 export async function cancelGame(playerId: number) {
