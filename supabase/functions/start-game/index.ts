@@ -25,10 +25,14 @@ Deno.serve(async (req) => {
     const player = await db.select().from(playersTable).where(eq(playersTable.firebase_id, firebaseId)).then(takeUniqueOrThrow)
     const playerId = player.id
 
-    if(body.player_booster_id === 0) await startGame(playerId)
-    else await startGame(playerId,body.player_booster_id)
+    let gameSession
+    if(body.player_booster_id === 0) gameSession = await startGame(playerId)
+    else gameSession = await startGame(playerId,body.player_booster_id)
   
-    const response = {message : "Ok"}
+    const result = gameSession
+    const response = {message : "Ok",
+      response : result
+    }
 
     return new Response(
       JSON.stringify(response),

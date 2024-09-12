@@ -41,7 +41,11 @@ export async function startGame(playerId: number, playerBoosterId?: number) {
       status: "ACTIVE",
     });
   })
-  
+  return {
+    booster_drop_id : boosterDrop.id,
+    booster_drop_duration : boosterDrop.duration,
+    boss_id : bossId
+  }
 }
 
 export async function cancelGame(playerId: number) {
