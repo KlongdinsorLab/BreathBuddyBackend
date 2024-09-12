@@ -7,6 +7,7 @@ import { gameSessionInterface } from "./interfaces.ts";
 import { getLevelByScore } from "./levelService.ts";
 import { playersBoostersTable } from "../schema.ts";
 import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
+import { addHours } from "./dateService.ts";
 import { and, eq, lte, desc, isNotNull } from "drizzle-orm";
 import { playerBoosterStatusEnum } from "../schema.ts";
 
@@ -119,15 +120,16 @@ export async function finishGame(
 
         console.log(game);
 
-        if (isBoosterReceived) {
-            await tx.insert(playersBoostersTable).values({
-                player_id: playerId,
-                booster_id: game.booster_drop_id,
-                status: "ACTIVE",
-            });
-        }
-        boosterDropId = game.booster_drop_id;
-    });
+    if (isBoosterReceived) {
+      await tx.insert(playersBoostersTable).values({
+        player_id: playerId,
+        booster_id: game.booster_drop_id,
+        expired_at : game.booster_drop_duration === 0 ? null : addHours(now,game.booster_drop_duration),
+        status: "ACTIVE",
+      });
+    }
+    boosterDropId = game.booster_drop_id;
+  });
 
     const newAchievements = await getNewAchievements(playerId);
     const totalGames = await getTotalGames(playerId);

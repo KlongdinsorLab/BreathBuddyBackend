@@ -10,3 +10,10 @@ export function checkSameDay(date1 : Date, date2 : Date) : boolean {
         && date1.getUTCMonth() === date2.getUTCMonth()
         && date1.getUTCDate() === date2.getUTCDate()
 }
+
+export function addHours(date : Date, hours : number) : Date {
+    const dateCopy = new Date(date.getTime());
+    const hoursToAdd = hours * 60 * 60 * 1000;
+    dateCopy.setTime(date.getTime() + hoursToAdd);
+    return dateCopy;
+  }
