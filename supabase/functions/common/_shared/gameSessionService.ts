@@ -1,4 +1,4 @@
-import { and, eq, lte, desc, isNotNull } from "npm:drizzle-orm@^0.31.4/expressions";
+// import { and, eq, lte, desc, isNotNull } from "npm:drizzle-orm@^0.31.4/expressions";
 import { db } from "../db.ts";
 import { boostersTable, gameSessionsTable, levelsTable, playersTable } from "../schema.ts";
 import { getCurrentDifficulty } from "./playerService.ts";
@@ -7,29 +7,33 @@ import { gameSessionInterface } from "./interfaces.ts";
 import { getLevelByScore } from "./levelService.ts";
 import { playersBoostersTable } from "../schema.ts";
 import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
+import { and, eq, lte, desc, isNotNull } from "drizzle-orm";
+import { playerBoosterStatusEnum } from "../schema.ts";
 
+type BoosterStatus = 'ACTIVE' | 'USED';
 
 export async function startGame(playerId: number, playerBoosterId?: number) {
-  await cancelGame(playerId); // cancel currently active game(s)
-  const currentDifficultyId = await getCurrentDifficulty(playerId);
-  const boosterDrop = await getRandomBooster()
-  const bossId = await getRandomBoss(playerId)
+    await cancelGame(playerId); // cancel currently active game(s)
+    const currentDifficultyId = await getCurrentDifficulty(playerId);
+    const boosterDrop = await getRandomBooster()
+    const bossId = await getRandomBoss(playerId)
 
-  // TODO check booster expire date
-  if(playerBoosterId){
-    const targetBooster = await db.select().from(playersBoostersTable).where(and(
-      eq(playersBoostersTable.id,playerBoosterId),
-      eq(playersBoostersTable.status,"ACTIVE")
-    ))
+    // TODO check booster expire date
+    if (playerBoosterId) {
+        const targetBooster = await db.select().from(playersBoostersTable).where(and(
+            eq(playersBoostersTable.id, playerBoosterId),
+            eq(playersBoostersTable.status, "ACTIVE")
+        ))
 
-    if(targetBooster.length === 0) throw new Error("No booster to consume or booster is already used")
-  }
-  
-
-  await db.transaction(async (tx) => {
-    if(playerBoosterId) {
-      await tx.update(playersBoostersTable).set({status:"USED"}).where(eq(playersBoostersTable.id,playerBoosterId)).returning()
+        if (targetBooster.length === 0) throw new Error("No booster to consume or booster is already used")
     }
+
+
+    await db.transaction(async (tx) => {
+        if (playerBoosterId) {
+            await tx.update(playersBoostersTable).set({ status: "USED" }).where(eq(playersBoostersTable.id, playerBoosterId)).returning()
+        }
+
     await tx.insert(gameSessionsTable).values({
       player_id: playerId,
       difficulty_id: currentDifficultyId,
@@ -49,184 +53,211 @@ export async function startGame(playerId: number, playerBoosterId?: number) {
 }
 
 export async function cancelGame(playerId: number) {
-  await db
-    .update(gameSessionsTable)
-    .set({
-      status: "CANCEL",
-      ended_at: new Date(),
-    })
-    .where(
-      and(
-        eq(gameSessionsTable.status, "ACTIVE"),
-        eq(gameSessionsTable.player_id, playerId)
-      )
-    );
+    await db
+        .update(gameSessionsTable)
+        .set({
+            status: "CANCEL",
+            ended_at: new Date(),
+        })
+        .where(
+            and(
+                eq(gameSessionsTable.status, "ACTIVE"),
+                eq(gameSessionsTable.player_id, playerId)
+            )
+        );
 }
 
 export async function updateGame(playerId: number, score: number, lap: number) {
-  const updatedGame = await db
-    .update(gameSessionsTable)
-    .set({
-      lap: lap,
-      score: score,
-      updated_at: new Date(),
-    })
-    .where(
-      and(
-        eq(gameSessionsTable.player_id, playerId),
-        eq(gameSessionsTable.status, "ACTIVE")
-      )
-    )
-    .returning();
+    const updatedGame = await db
+        .update(gameSessionsTable)
+        .set({
+            lap: lap,
+            score: score,
+            updated_at: new Date(),
+        })
+        .where(
+            and(
+                eq(gameSessionsTable.player_id, playerId),
+                eq(gameSessionsTable.status, "ACTIVE")
+            )
+        )
+        .returning();
 
-  if (updatedGame.length === 0)
-    throw new Error("No Currently Active Game to Update");
+    if (updatedGame.length === 0)
+        throw new Error("No Currently Active Game to Update");
 }
 
 export async function finishGame(
-  playerId: number,
-  score: number,
-  playerTotalScore: number,
-  lap: number,
-  isBoosterReceived: boolean
+    playerId: number,
+    score: number,
+    playerTotalScore: number,
+    lap: number,
+    isBoosterReceived: boolean
 ) {
-  if (lap !== 10) throw new Error("Incorrect Lap");
+    if (lap !== 10) throw new Error("Incorrect Lap");
 
-  let boosterDropId: number = 0;
-  const now = new Date();
-  await db.transaction(async (tx) => {
-    const game = await tx
-      .update(gameSessionsTable)
-      .set({
-        lap: lap,
-        score: score,
-        updated_at: now,
-        ended_at: now,
-        status: "END",
-      })
-      .where(
-        and(
-          eq(gameSessionsTable.player_id, playerId),
-          eq(gameSessionsTable.status, "ACTIVE")
-        )
-      )
-      .returning()
-      .then(takeUniqueOrThrow);
+    let boosterDropId: number = 0;
+    const now = new Date();
+    await db.transaction(async (tx) => {
+        const game = await tx
+            .update(gameSessionsTable)
+            .set({
+                lap: lap,
+                score: score,
+                updated_at: now,
+                ended_at: now,
+                status: "END",
+            })
+            .where(
+                and(
+                    eq(gameSessionsTable.player_id, playerId),
+                    eq(gameSessionsTable.status, "ACTIVE")
+                )
+            )
+            .returning()
+            .then(takeUniqueOrThrow);
 
-    console.log(game);
+        console.log(game);
 
-    if (isBoosterReceived) {
-      await tx.insert(playersBoostersTable).values({
-        player_id: playerId,
-        booster_id: game.booster_drop_id,
-        status: "ACTIVE",
-      });
-    }
-    boosterDropId = game.booster_drop_id;
-  });
+        if (isBoosterReceived) {
+            await tx.insert(playersBoostersTable).values({
+                player_id: playerId,
+                booster_id: game.booster_drop_id,
+                status: "ACTIVE",
+            });
+        }
+        boosterDropId = game.booster_drop_id;
+    });
 
-  const newAchievements = await getNewAchievements(playerId);
-  const totalGames = await getTotalGames(playerId);
-  const gamesPlayedToday = await getGamesPlayedToday(playerId);
+    const newAchievements = await getNewAchievements(playerId);
+    const totalGames = await getTotalGames(playerId);
+    const gamesPlayedToday = await getGamesPlayedToday(playerId);
 
-  const level = await db
-    .select()
-    .from(levelsTable)
-    .where(lte(levelsTable.score_required, playerTotalScore + score))
-    .orderBy(desc(levelsTable.score_required));
-  console.log("Game Session Service : " + level[0])
-  const newLevel = level[0];
-  
-  const oldLevel = await getLevelByScore(playerTotalScore);
-  const isLevelUp: boolean = newLevel.level !== oldLevel.level;
+    const level = await db
+        .select()
+        .from(levelsTable)
+        .where(lte(levelsTable.score_required, playerTotalScore + score))
+        .orderBy(desc(levelsTable.score_required));
+    console.log("Game Session Service : " + level[0])
+    const newLevel = level[0];
 
-  await db.transaction(async (tx) => {
-    await tx
-      .update(playersTable)
-      .set({ total_score: playerTotalScore + score })
-      .where(eq(playersTable.id, playerId))
-      .returning()
-      .then(takeUniqueOrThrow);
-  })
+    const oldLevel = await getLevelByScore(playerTotalScore);
+    const isLevelUp: boolean = newLevel.level !== oldLevel.level;
 
-  return {
-    new_achievements: newAchievements,
-    total_games: totalGames,
-    games_played_today: gamesPlayedToday,
-    level_up: isLevelUp,
-    level: newLevel,
-    booster: isBoosterReceived ? boosterDropId : null,
-  };
+    await db.transaction(async (tx) => {
+        await tx
+            .update(playersTable)
+            .set({ total_score: playerTotalScore + score })
+            .where(eq(playersTable.id, playerId))
+            .returning()
+            .then(takeUniqueOrThrow);
+
+        // Save received booster from newLevel
+        const { booster_id_1, booster_id_2, booster_id_3, booster_amount_1, booster_amount_2, booster_amount_3 } = newLevel
+        const isNewLevelGiveBoosters = booster_id_1 && booster_id_2 && booster_id_3
+
+        if (isLevelUp && isNewLevelGiveBoosters) {
+            const boosterArray1 = [...Array(booster_amount_1).keys()].map(() => ({
+                player_id: playerId,
+                booster_id: booster_id_1,
+                status: "ACTIVE" as BoosterStatus,
+            }))
+
+            const boosterArray2 = [...Array(booster_amount_2).keys()].map(() => ({
+                player_id: playerId,
+                booster_id: booster_id_2,
+                status: "ACTIVE" as BoosterStatus,
+            }))
+
+            const boosterArray3 = [...Array(booster_amount_3).keys()].map(() => ({
+                player_id: playerId,
+                booster_id: booster_id_3,
+                status: "ACTIVE" as BoosterStatus,
+            }))
+
+            await tx.insert(playersBoostersTable).values([...boosterArray1, ...boosterArray2, ...boosterArray3]);
+        }
+    })
+
+    return {
+        new_achievements: newAchievements,
+        total_games: totalGames,
+        games_played_today: gamesPlayedToday,
+        level_up: isLevelUp,
+        level: newLevel,
+        booster: isBoosterReceived ? boosterDropId : null,
+    };
 }
 
 export async function getTotalGames(playerId: number) {
-  const allGames = await db
-    .select()
-    .from(gameSessionsTable)
-    .where(eq(gameSessionsTable.player_id, playerId));
-  return allGames.length;
+    const allGames = await db
+        .select()
+        .from(gameSessionsTable)
+        .where(eq(gameSessionsTable.player_id, playerId));
+    return allGames.length;
 }
 
 export async function getGamesPlayedToday(playerId: number) {
-  const allGames = await db
-    .select()
-    .from(gameSessionsTable)
-    .where(eq(gameSessionsTable.player_id, playerId))
-    .orderBy(gameSessionsTable.started_at);
-  const now = new Date();
-  const gamesPlayedToday: gameSessionInterface[] = [];
+    const allGames = await db
+        .select()
+        .from(gameSessionsTable)
+        .where(eq(gameSessionsTable.player_id, playerId))
+        .orderBy(gameSessionsTable.started_at);
+    const now = new Date();
+    const gamesPlayedToday: gameSessionInterface[] = [];
 
-  allGames.forEach((gameSession) => {
-    const isSameDay = checkSameDay(now, gameSession.started_at);
+    allGames.forEach((gameSession) => {
+        const isSameDay = checkSameDay(now, gameSession.started_at);
 
-    if (isSameDay) {
-      gamesPlayedToday.push(gameSession);
-    } else return;
-  });
+        if (isSameDay) {
+            gamesPlayedToday.push(gameSession);
+        } else return;
+    });
 
-  return gamesPlayedToday;
+    return gamesPlayedToday;
 }
 
 
-export async function getLastTwoGames(playerId : number) {
-  const gameSessions = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id,playerId)).orderBy(desc(gameSessionsTable.started_at))
-  return {last_played_game_1 : gameSessions[0] ?? null,
-    last_played_game_2 : gameSessions[1] ?? null
-  }
+export async function getLastTwoGames(playerId: number) {
+    const gameSessions = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id, playerId)).orderBy(desc(gameSessionsTable.started_at))
+    return {
+        last_played_game_1: gameSessions[0] ?? null,
+        last_played_game_2: gameSessions[1] ?? null
+    }
 }
 
-export async function getRandomBooster(){
-  const allBoosters = await db.select().from(boostersTable).where(eq(boostersTable.type,"NORMAL"))
-  const boosterId =  allBoosters[getRandomInt(allBoosters.length)].id
-  const boosterDuration = boosterDurationRandomPool[getRandomInt(boosterDurationRandomPool.length)]
-  return { id : boosterId, duration : boosterDuration }
+export async function getRandomBooster() {
+    const allBoosters = await db.select().from(boostersTable).where(eq(boostersTable.type, "NORMAL"))
+    const boosterId = allBoosters[getRandomInt(allBoosters.length)].id
+    const boosterDuration = boosterDurationRandomPool[getRandomInt(boosterDurationRandomPool.length)]
+    return { id: boosterId, duration: boosterDuration }
 }
 
-export async function getRandomBoss(playerId : number) {
-  const player = await db.select().from(playersTable).where(eq(playersTable.id,playerId)).then(takeUniqueOrThrow)
-  const totalScore = player.total_score
-  const playerLevel = await db.select().from(levelsTable).where(
-    and(
-      lte(levelsTable.level,totalScore),
-      isNotNull(levelsTable.boss_id)
+export async function getRandomBoss(playerId: number) {
+    const player = await db.select().from(playersTable).where(eq(playersTable.id, playerId)).then(takeUniqueOrThrow)
+    const totalScore = player.total_score
+    const playerLevel = await db.select().from(levelsTable).where(
+        and(
+            lte(levelsTable.level, totalScore),
+            isNotNull(levelsTable.boss_id)
+        )
     )
-  )
-  const bossPoolCount = playerLevel.length 
-  const bossPool = bossRandomPool[bossPoolCount]
-  return bossPool[getRandomInt(bossPool.length)]
+    const bossPoolCount = playerLevel.length
+    const bossPool = bossRandomPool[bossPoolCount]
+    return bossPool[getRandomInt(bossPool.length)]
 }
 
 export const bossRandomPool = [
-  [1],
-  [1,2],
-  [1,2,3,3],
-  [1,2,3,4,4],
-  [1,2,3,3,4,4,5,5,5,5],
-  [1,2,3,4,4,5,5,6,6,6]
+    [1],
+    [1, 2],
+    [1, 2, 3, 3],
+    [1, 2, 3, 4, 4],
+    [1, 2, 3, 3, 4, 4, 5, 5, 5, 5],
+    [1, 2, 3, 4, 4, 5, 5, 6, 6, 6]
 ]
 
-export const boosterDurationRandomPool = [0,0,0,0,0,0,3,6,6,12]
+export const boosterDurationRandomPool = [0, 0, 0, 0, 0, 0, 3, 6, 6, 12]
 
-export function getRandomInt(max : number) {
-  return Math.floor(Math.random() * max)
+export function getRandomInt(max: number) {
+    return Math.floor(Math.random() * max)
 }
