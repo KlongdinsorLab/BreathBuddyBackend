@@ -124,7 +124,7 @@ export async function finishGame(
       await tx.insert(playersBoostersTable).values({
         player_id: playerId,
         booster_id: game.booster_drop_id,
-        expired_at : game.booster_drop_duration === 0 ? null : addHours(now,game.booster_drop_duration),
+        expired_at : game.booster_drop_duration === null ? null : addHours(now,game.booster_drop_duration),
         status: "ACTIVE",
       });
     }
