@@ -206,17 +206,10 @@ export async function getGamesPlayedToday(playerId: number) {
         .where(eq(gameSessionsTable.player_id, playerId))
         .orderBy(gameSessionsTable.started_at);
     const now = new Date();
-    const gamesPlayedToday: Date[] = [];
+    const gamesPlayedToday = allGames.filter((gameSession) => checkToday(gameSession.started_at))
+    const gamesPlayedTodayTime = gamesPlayedToday.map(game => game.started_at)
 
-    allGames.forEach((gameSession) => {
-        const isSameDay = checkToday(gameSession.started_at);
-
-        if (isSameDay) {
-            gamesPlayedToday.push(gameSession.started_at);
-        } else return;
-    });
-
-    return gamesPlayedToday;
+    return gamesPlayedTodayTime;
 }
 
 
