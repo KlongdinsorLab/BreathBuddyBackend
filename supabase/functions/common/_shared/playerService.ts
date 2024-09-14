@@ -1,9 +1,10 @@
 import { and, desc, eq, lt } from "npm:drizzle-orm@^0.31.4/expressions";
 import { db } from "../db.ts";
-import { charactersTable, playersAchievementsTable, playersCharactersTable, playersTable } from "../schema.ts";
+import { charactersTable, difficultiesTable, playersAchievementsTable, playersCharactersTable, playersTable } from "../schema.ts";
 import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
 import { getLevelByScore } from "./levelService.ts"
 import { getLastTwoGames, getTotalEndedGames } from "./gameSessionService.ts";
+import { getGamesPlayedToday, getLastTwoGames, getTotalGames, getTotalEndedGames } from "./gameSessionService.ts";
 
 export async function updateAirflow(playerId : number, airflow : number){
     if(airflow < 100 || airflow > 600 || airflow%100 !== 0) {
@@ -85,15 +86,20 @@ export async function getRanking() {
 export async function getPlayer(playerId : number){
     const player = await db.select().from(playersTable).where(eq(playersTable.id,playerId)).then(takeUniqueOrThrow)
     const playerLevel = await getLevelByScore(player.total_score)
-    const lastTwoGames = await getLastTwoGames(playerId)
+    const playCount = await getTotalGames(playerId)
+    const playToday = await getGamesPlayedToday(playerId)
+    const difficulty = await db.select().from(difficultiesTable).where(eq(difficultiesTable.id,player.difficulty_id)).then(takeUniqueOrThrow)
+    const unlockedCharacters = await getUnlockedCharacters(playerId)
+    const unlockedCharactersId = unlockedCharacters.map(obj => obj.id)
 
     return {
-        airflow : player.airflow,
-        difficulty : player.difficulty_id,
-        selected_character_id : player.selected_character_id,
         username : player.username,
         level : playerLevel,
-        last_played_1 : lastTwoGames.last_played_game_1 === null ? null : lastTwoGames.last_played_game_1.started_at,
-        last_played_2 : lastTwoGames.last_played_game_2 === null ? null : lastTwoGames.last_played_game_2.started_at
+        airflow : player.airflow,
+        play_count : playCount,
+        play_today : playToday,
+        difficulty : difficulty,
+        selected_character_id : player.selected_character_id,
+        unlocked_characters_id : unlockedCharactersId
     }
 }
