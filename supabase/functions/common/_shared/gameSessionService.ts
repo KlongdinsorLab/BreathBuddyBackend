@@ -7,7 +7,7 @@ import { gameSessionInterface } from "./interfaces.ts";
 import { getLevelByScore } from "./levelService.ts";
 import { playersBoostersTable } from "../schema.ts";
 import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
-import { addHours } from "./dateService.ts";
+import { addHours, checkToday } from "./dateService.ts";
 import { and, eq, lte, desc, isNotNull } from "drizzle-orm";
 import { playerBoosterStatusEnum } from "../schema.ts";
 
@@ -206,17 +206,10 @@ export async function getGamesPlayedToday(playerId: number) {
         .where(eq(gameSessionsTable.player_id, playerId))
         .orderBy(gameSessionsTable.started_at);
     const now = new Date();
-    const gamesPlayedToday: gameSessionInterface[] = [];
+    const gamesPlayedToday = allGames.filter((gameSession) => checkToday(gameSession.started_at))
+    const gamesPlayedTodayTime = gamesPlayedToday.map(game => game.started_at)
 
-    allGames.forEach((gameSession) => {
-        const isSameDay = checkSameDay(now, gameSession.started_at);
-
-        if (isSameDay) {
-            gamesPlayedToday.push(gameSession);
-        } else return;
-    });
-
-    return gamesPlayedToday;
+    return gamesPlayedTodayTime;
 }
 
 
