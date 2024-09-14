@@ -3,7 +3,7 @@ import { db } from "../db.ts";
 import { charactersTable, playersAchievementsTable, playersCharactersTable, playersTable } from "../schema.ts";
 import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
 import { getLevelByScore } from "./levelService.ts"
-import { getLastTwoGames } from "./gameSessionService.ts";
+import { getLastTwoGames, getTotalEndedGames } from "./gameSessionService.ts";
 
 export async function updateAirflow(playerId : number, airflow : number){
     if(airflow < 100 || airflow > 600 || airflow%100 !== 0) {
@@ -68,11 +68,17 @@ export async function getUnlockedCharacters(playerId : number) {
 }
 
 export async function getRanking() {
-    const ranking = await db.select({
+    const ScoreRanking = await db.select({
+        id : playersTable.id,
         username : playersTable.username,
         total_score : playersTable.total_score
     }).from(playersTable).orderBy(desc(playersTable.total_score))
 
+    const ranking = await Promise.all(ScoreRanking.map(async obj => ({
+            ...obj,
+            total_game : await getTotalEndedGames(obj.id)
+        }))
+    ) 
     return ranking
 }
 
