@@ -69,18 +69,24 @@ export async function getUnlockedCharacters(playerId : number) {
 }
 
 export async function getRanking() {
-    const ScoreRanking = await db.select({
+    const scoreRanking = await db.select({
         id : playersTable.id,
         username : playersTable.username,
         total_score : playersTable.total_score
     }).from(playersTable).orderBy(desc(playersTable.total_score))
 
-    const ranking = await Promise.all(ScoreRanking.map(async obj => ({
+    const ranking = await Promise.all(scoreRanking.map(async obj => ({
             ...obj,
             total_game : await getTotalEndedGames(obj.id)
         }))
     ) 
-    return ranking
+
+    const rankingSortedByScore = ranking.sort((a,b) => b.total_score - a.total_score)
+    const rankingSortedByPlay = ranking.sort((a,b) => b.total_game - a.total_game)
+    return {
+        ranking_by_score : rankingSortedByScore,
+        ranking_by_play : rankingSortedByPlay
+    }
 }
 
 export async function getPlayer(playerId : number){
