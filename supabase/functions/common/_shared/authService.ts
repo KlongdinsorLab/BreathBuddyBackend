@@ -13,7 +13,7 @@ export async function register(firebaseId : string, phoneNumber: string, age : n
           // TODO consider again about ?? 1 part
           selected_character_id : 1,
           gender : (gender === 'M') ? 'M' : (gender === 'F' ? 'F' : null),
-          airflow : ( airflow < 100 || airflow > 600 || airflow%100 !== 0 ) ? airflow! : null,
+          airflow : ( airflow < 100 || airflow > 600 || airflow%100 !== 0 ) ? null : airflow,
     
           // TODO fix birth year
           birth_year : 2024 - age!
