@@ -83,7 +83,7 @@ export async function getPlayer(playerId : number){
     const playToday = await getGamesPlayedToday(playerId)
     const difficulty = await db.select().from(difficultiesTable).where(eq(difficultiesTable.id,player.difficulty_id)).then(takeUniqueOrThrow)
     const unlockedCharacters = await getUnlockedCharacters(playerId)
-    const unlockedCharactersId = unlockedCharacters.map(obj => obj.id)
+    const unlockedCharactersId = unlockedCharacters.map(obj => obj.character_id)
 
     return {
         username : player.username,
