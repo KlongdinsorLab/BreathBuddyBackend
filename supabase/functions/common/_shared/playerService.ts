@@ -79,8 +79,8 @@ export async function getRanking() {
 export async function getPlayer(playerId : number){
     const player = await db.select().from(playersTable).where(eq(playersTable.id,playerId)).then(takeUniqueOrThrow)
     const playerLevel = await getLevelByScore(player.total_score)
-    const playCount = await getTotalGames(playerId)
     const playToday = await getGamesPlayedToday(playerId)
+    const playCount = playToday.length
     const difficulty = await db.select().from(difficultiesTable).where(eq(difficultiesTable.id,player.difficulty_id)).then(takeUniqueOrThrow)
     const unlockedCharacters = await getUnlockedCharacters(playerId)
     const unlockedCharactersId = unlockedCharacters.map(obj => obj.character_id)
