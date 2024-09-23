@@ -199,6 +199,17 @@ export async function getTotalGames(playerId: number) {
     return allGames.length;
 }
 
+export async function getTotalEndedGames(playerId: number) {
+    const allGames = await db
+        .select()
+        .from(gameSessionsTable)
+        .where(and(
+            eq(gameSessionsTable.player_id, playerId),
+            eq(gameSessionsTable.status,"END")
+    ));
+    return allGames.length;
+}
+
 export async function getGamesPlayedToday(playerId: number) {
     const allGames = await db
         .select()
