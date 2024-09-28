@@ -3,8 +3,7 @@ import { db } from "../db.ts";
 import { charactersTable, difficultiesTable, playersAchievementsTable, playersCharactersTable, playersTable } from "../schema.ts";
 import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
 import { getLevelByScore } from "./levelService.ts"
-import { getLastTwoGames, getTotalEndedGames } from "./gameSessionService.ts";
-import { getGamesPlayedToday, getLastTwoGames, getTotalGames, getTotalEndedGames } from "./gameSessionService.ts";
+import { getGamesPlayedToday, getTotalEndedGames } from "./gameSessionService.ts";
 
 export async function updateAirflow(playerId : number, airflow : number){
     if(airflow < 100 || airflow > 600 || airflow%100 !== 0) {
