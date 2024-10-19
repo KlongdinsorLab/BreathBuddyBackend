@@ -244,7 +244,7 @@ export async function getRandomBoss(playerId: number) {
     const totalScore = player.total_score
     const playerLevel = await db.select().from(levelsTable).where(
         and(
-            lte(levelsTable.level, totalScore),
+            lte(levelsTable.score_required, totalScore),
             isNotNull(levelsTable.boss_id)
         )
     )
