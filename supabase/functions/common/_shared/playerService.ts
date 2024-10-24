@@ -90,7 +90,9 @@ export async function getRanking() {
 
 export async function getPlayer(playerId : number){
     const player = await db.select().from(playersTable).where(eq(playersTable.id,playerId)).then(takeUniqueOrThrow)
-    const playerLevel = await getLevelByScore(player.total_score)
+    const levelAndProgression = await getLevelByScore(player.total_score)
+    const playerLevel = levelAndProgression.level
+    const playerLevelProgression = levelAndProgression.progression
     const playToday = await getGamesPlayedToday(playerId)
     const playCount = playToday.length
     const difficulty = await db.select().from(difficultiesTable).where(eq(difficultiesTable.id,player.difficulty_id)).then(takeUniqueOrThrow)
@@ -100,6 +102,7 @@ export async function getPlayer(playerId : number){
     return {
         username : player.username,
         level : playerLevel,
+        progression : playerLevelProgression,
         airflow : player.airflow,
         play_count : playCount,
         play_today : playToday,

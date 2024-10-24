@@ -1,6 +1,7 @@
 import { eq, desc, lte } from "npm:drizzle-orm@^0.31.4";
 import { db } from "../db.ts";
 import { gameSessionsTable, levelsTable } from "../schema.ts";
+import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
 
 export async function getLevelByPlayer(playerId : number) {
     const allGameSessions = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id,playerId))
@@ -16,6 +17,18 @@ export async function getLevelByPlayer(playerId : number) {
 
 export async function getLevelByScore(score : number) {
     
-    const level = await db.select().from(levelsTable).where(lte(levelsTable.score_required,score)).orderBy(desc(levelsTable.score_required))
-    return level[0]
+    const level = await db.select().from(levelsTable).orderBy(levelsTable.score_required)
+    let levelIndex: number = 0
+    level.forEach((element : {score_required : number},index : number) => {
+        if(element.score_required > score) {
+            return
+        }
+        levelIndex = index
+    });
+    const progression = Math.round((score - level[levelIndex].score_required) / (level[levelIndex+1].score_required - level[levelIndex].score_required) * 100)
+    
+    return {
+        level : level[levelIndex],
+        progression : progression
+    }
 }
