@@ -80,8 +80,49 @@ export async function getRanking() {
         }))
     ) 
 
-    const rankingSortedByScore = ranking.sort((a,b) => b.total_score - a.total_score)
-    const rankingSortedByPlay = ranking.sort((a,b) => b.total_game - a.total_game)
+    // Sort By Score
+    const rankingSortedByScore: {
+        id: number,
+        username: string,
+        total_score: number,
+        total_game: number
+    }[] = ranking.sort((a: {
+        id: number,
+        username: string,
+        total_score: number,
+        total_game: number
+    },b: {
+        id: number,
+        username: string,
+        total_score: number,
+        total_game: number
+    }) => b.total_score - a.total_score)
+
+    // const rankingCopy = ranking.sort((a,b) => b.total_game - a.total_game)
+    // Hard Copy
+    const rankingCopy: {
+        id: number,
+        username: string,
+        total_score: number,
+        total_game: number
+    }[] = []
+    rankingSortedByScore.forEach((element) => {
+        rankingCopy.push(Object.assign({}, element))
+    });
+
+    // Sort by play
+    const rankingSortedByPlay = rankingCopy.sort((a: {
+        id: number,
+        username: string,
+        total_score: number,
+        total_game: number
+    },b: {
+        id: number,
+        username: string,
+        total_score: number,
+        total_game: number
+    }) => b.total_game - a.total_game)
+
     return {
         ranking_by_score : rankingSortedByScore,
         ranking_by_play : rankingSortedByPlay
