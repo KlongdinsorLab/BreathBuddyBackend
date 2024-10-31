@@ -96,7 +96,11 @@ export async function getRanking() {
         username: string,
         total_score: number,
         total_game: number
-    }) => b.total_score - a.total_score)
+    }) => {
+        if(a.total_score < b.total_score) return 1
+        if(a.total_score > b.total_score) return -1
+        return 0
+    })
 
     // const rankingCopy = ranking.sort((a,b) => b.total_game - a.total_game)
     // Hard Copy
@@ -121,7 +125,11 @@ export async function getRanking() {
         username: string,
         total_score: number,
         total_game: number
-    }) => b.total_game - a.total_game)
+    }) => {
+        if(a.total_game < b.total_game) return 1
+        if(a.total_game > b.total_game) return -1
+        return 0
+    })
 
     return {
         ranking_by_score : rankingSortedByScore,
