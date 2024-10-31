@@ -16,7 +16,8 @@ export async function getBoosterRedeem(playerId : number) {
                 gt(playersBoostersTable.expired_at,now)
             )
         ))
-        .orderBy(desc(playersBoostersTable.expired_at))
+        .orderBy(playersBoostersTable.expired_at)
+    console.log(playerBoostersList)
     
     const boosterListJson = [
         {boosterId : 1, expireDate: <Date[]> [], amount: 0},
@@ -51,4 +52,30 @@ export async function getBoosterBag(playerId : number) {
         ))
         .orderBy(desc(playersBoostersTable.expired_at))
     return playerBoostersList
+}
+
+export async function useBooster(playerId : number, boosterId : number) {
+    const now = new Date()
+
+    const availableBoosters = await db.select()
+        .from(playersBoostersTable)
+        .where(and (
+            eq(playersBoostersTable.player_id, playerId),
+            eq(playersBoostersTable.status, "ACTIVE"),
+            eq(playersBoostersTable.booster_id, boosterId),
+            or(
+                isNull(playersBoostersTable.expired_at),
+                gt(playersBoostersTable.expired_at,now)
+            )
+        ))
+        .orderBy(playersBoostersTable.expired_at)
+
+    console.log(availableBoosters)
+
+    if(availableBoosters.length === 0) 
+        throw new Error("No booster to use")
+    
+    await db.update(playersBoostersTable)
+        .set({status : 'USED'})
+        .where(eq(playersBoostersTable.id, availableBoosters[0].id))
 }
