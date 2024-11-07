@@ -26,8 +26,8 @@ Deno.serve(async (req) => {
     const playerId = player.id
 
     let gameSession
-    if(body.player_booster_id === 0) gameSession = await startGame(playerId)
-    else gameSession = await startGame(playerId,body.player_booster_id)
+    if(body.booster_id === 0) gameSession = await startGame(playerId)
+    else gameSession = await startGame(playerId,body.booster_id)
   
     const result = gameSession
     const response = {message : "Ok",
