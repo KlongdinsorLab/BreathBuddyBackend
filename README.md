@@ -68,3 +68,15 @@ $ supabase functions deploy <function name> --project-ref dtfbxtfpdfpwflcjxttr
 <!-- https://www.youtube.com/watch?v=l2KlzGrhB6w -->
 
 https://supabase.com/docs/guides/cli/local-development
+
+### Setup for Production
+1. Define these values in Github secrets.
+   - SUPABASE_ACCES_TOKEN_PROD
+   - SUPABASE_DB_PASSWORD_PROD
+   - SUPABASE_PROJECT_ID
+   - DATABASE_URL
+
+2. Merge from branch ```develop``` to ```main```.
+3. Make sure that ```dbpush``` and ```deploy``` workflows run without any error.
+4. Define DATABASE_URL in .env in a local editor.
+5. In a local editor, run seed.ts by using command. ```deno run .\supabase\functions\common\seed.ts```
