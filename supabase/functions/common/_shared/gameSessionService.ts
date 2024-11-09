@@ -8,44 +8,57 @@ import { getLevelByScore } from "./levelService.ts";
 import { playersBoostersTable } from "../schema.ts";
 import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
 import { addHours, checkToday } from "./dateService.ts";
-import { and, eq, lte, desc, isNotNull } from "drizzle-orm";
+import { or, isNull, gt, and, eq, lte, desc, isNotNull } from "drizzle-orm";
 import { playerBoosterStatusEnum } from "../schema.ts";
 
 type BoosterStatus = 'ACTIVE' | 'USED';
 
-export async function startGame(playerId: number, playerBoosterId?: number) {
+export async function startGame(playerId: number, boosterId?: number) {
     await cancelGame(playerId); // cancel currently active game(s)
     const currentDifficultyId = await getCurrentDifficulty(playerId);
     const boosterDrop = await getRandomBooster()
     const bossId = await getRandomBoss(playerId)
 
-    // TODO check booster expire date
-    if (playerBoosterId) {
-        const targetBooster = await db.select().from(playersBoostersTable).where(and(
-            eq(playersBoostersTable.id, playerBoosterId),
-            eq(playersBoostersTable.status, "ACTIVE")
-        ))
-
-        if (targetBooster.length === 0) throw new Error("No booster to consume or booster is already used")
-    }
-
-
     await db.transaction(async (tx) => {
-        if (playerBoosterId) {
-            await tx.update(playersBoostersTable).set({ status: "USED" }).where(eq(playersBoostersTable.id, playerBoosterId)).returning()
+        if (boosterId) {
+            const now = new Date()
+
+             const availableBoosters = await tx.select()
+                .from(playersBoostersTable)
+                .where(and (
+                    eq(playersBoostersTable.player_id, playerId),
+                    eq(playersBoostersTable.status, "ACTIVE"),
+                    eq(playersBoostersTable.booster_id, boosterId),
+                    or(
+                        isNull(playersBoostersTable.expired_at),
+                        gt(playersBoostersTable.expired_at,now)
+                    )
+                ))
+                .orderBy(playersBoostersTable.expired_at)
+
+            console.log(availableBoosters)
+
+            if(availableBoosters.length === 0) 
+                throw new Error("No booster to use")
+    
+            await tx.update(playersBoostersTable)
+                .set({status : 'USED'})
+                .where(eq(playersBoostersTable.id, availableBoosters[0].id))
         }
 
-    await tx.insert(gameSessionsTable).values({
-      player_id: playerId,
-      difficulty_id: currentDifficultyId,
-      boss_id: bossId,
-      booster_drop_id: boosterDrop.id,
-      booster_drop_duration: boosterDrop.duration === 0 ? null : boosterDrop.duration,
-      score: 0,
-      lap: 1,
-      status: "ACTIVE",
-    });
-  })
+        await tx.insert(gameSessionsTable).values({
+            player_id: playerId,
+            difficulty_id: currentDifficultyId,
+            boss_id: bossId,
+            booster_drop_id: boosterDrop.id,
+            booster_drop_duration: boosterDrop.duration === 0 ? null : boosterDrop.duration,
+            score: 0,
+            lap: 1,
+            status: "ACTIVE",
+        });
+
+
+    })
   return {
     booster_drop_id : boosterDrop.id,
     booster_drop_duration : boosterDrop.duration,
