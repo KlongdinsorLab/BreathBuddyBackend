@@ -3,7 +3,7 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { getRanking } from "../common/_shared/playerService.ts";
 import { eq } from "npm:drizzle-orm@^0.31.4/expressions";
 import { getFirebaseId } from "../common/_shared/authService.ts";
@@ -12,39 +12,40 @@ import { takeUniqueOrThrow } from "../common/_shared/takeUniqueOrThrow.ts";
 import { db } from "../common/db.ts";
 import { playersTable } from "../common/schema.ts";
 
-console.log("Hello from Functions!")
+console.log("Hello from Functions!");
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
-  try{
+  try {
     // Check auth
-    const authHeader = req.headers.get("Authorization")!
-    const firebaseId = getFirebaseId(authHeader)
-    await db.select().from(playersTable).where(eq(playersTable.firebase_id, firebaseId)).then(takeUniqueOrThrow)
+    const authHeader = req.headers.get("Authorization")!;
+    const firebaseId = getFirebaseId(authHeader);
+    await db
+      .select()
+      .from(playersTable)
+      .where(eq(playersTable.firebase_id, firebaseId))
+      .then(takeUniqueOrThrow);
 
-    const result = await getRanking()
-  
-    const response = {message : "Ok", 
-      response : result
-    }
+    const result = await getRanking();
 
-    return new Response(
-      JSON.stringify(response),
-      {status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    )
-  }
-  catch(error){
+    const response = { message: "Ok", response: result };
+
+    return new Response(JSON.stringify(response), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
     const response = {
-      error : error.message,
-    }
-    return new Response(
-      JSON.stringify(response),
-      {status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    )
+      error: error.message,
+    };
+    return new Response(JSON.stringify(response), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
-})
+});
 
 /* To invoke locally:
 

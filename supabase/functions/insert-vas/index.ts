@@ -3,7 +3,7 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { getFirebaseId } from "../common/_shared/authService.ts";
 import { db } from "../common/db.ts";
 import { playersTable, vasTable, gameSessionsTable } from "../common/schema.ts";
@@ -12,55 +12,63 @@ import { takeUniqueOrThrow } from "../common/_shared/takeUniqueOrThrow.ts";
 import { updateAirflow } from "../common/_shared/playerService.ts";
 import { corsHeaders } from "../common/_shared/cors.ts";
 
-console.log("Hello from Functions!")
+console.log("Hello from Functions!");
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
-  try{
-    const { vas } = await req.json()
-    const authHeader = req.headers.get("Authorization")!
-    const firebaseId = getFirebaseId(authHeader)
-    const player = await db.select().from(playersTable).where(eq(playersTable.firebase_id, firebaseId)).then(takeUniqueOrThrow)
-    const playerId = player.id
+  try {
+    const { vas } = await req.json();
+    const authHeader = req.headers.get("Authorization")!;
+    const firebaseId = getFirebaseId(authHeader);
+    const player = await db
+      .select()
+      .from(playersTable)
+      .where(eq(playersTable.firebase_id, firebaseId))
+      .then(takeUniqueOrThrow);
+    const playerId = player.id;
 
-    const gameSessions = await db.select().from(gameSessionsTable).where(eq(gameSessionsTable.player_id, playerId))
-    const totalGameSessions = gameSessions.length
-    const totalIdealVas = Math.floor(totalGameSessions/10)
-    const vases = await db.select().from(vasTable).where(eq(vasTable.player_id, playerId))
-    let totalVas = vases.length
+    const gameSessions = await db
+      .select()
+      .from(gameSessionsTable)
+      .where(eq(gameSessionsTable.player_id, playerId));
+    const totalGameSessions = gameSessions.length;
+    const totalIdealVas = Math.floor(totalGameSessions / 10);
+    const vases = await db
+      .select()
+      .from(vasTable)
+      .where(eq(vasTable.player_id, playerId));
+    let totalVas = vases.length;
 
-    console.log("totalVas: ", totalVas)
-    console.log("totalIdealVas: ", totalIdealVas)
-    if (totalIdealVas <= totalVas){
-      throw new Error("You need to complete more game sessions to submit your VAS score")
+    console.log("totalVas: ", totalVas);
+    console.log("totalIdealVas: ", totalIdealVas);
+    if (totalIdealVas <= totalVas) {
+      throw new Error(
+        "You need to complete more game sessions to submit your VAS score",
+      );
     }
 
-    while (totalIdealVas-1 > totalVas){
-      await db.insert(vasTable).values({player_id: playerId, vas_score:0})
-      console.log("totalVas in while loop: ", totalVas)
-      totalVas += 1
+    while (totalIdealVas - 1 > totalVas) {
+      await db.insert(vasTable).values({ player_id: playerId, vas_score: 0 });
+      console.log("totalVas in while loop: ", totalVas);
+      totalVas += 1;
     }
 
-    await db.insert(vasTable).values({player_id: playerId, vas_score:vas})
-    const response = {message : "OK"}
+    await db.insert(vasTable).values({ player_id: playerId, vas_score: vas });
+    const response = { message: "OK" };
 
-    return new Response(
-      JSON.stringify(response),
-      { headers: { ...corsHeaders,"Content-Type": "application/json" } },
-    )
+    return new Response(JSON.stringify(response), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    const response = { message: e.message };
+
+    return new Response(JSON.stringify(response), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
-  catch(e){
-    const response = {message : e.message}
-
-    return new Response(
-      JSON.stringify(response),
-      { headers: { ...corsHeaders,"Content-Type": "application/json" } },
-    )
-  }
-
-})
+});
 
 /* To invoke locally:
 

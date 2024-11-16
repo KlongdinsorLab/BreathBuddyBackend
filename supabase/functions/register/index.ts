@@ -3,43 +3,52 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { getFirebaseId, getPhoneNumber, register } from "../common/_shared/authService.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import {
+  getFirebaseId,
+  getPhoneNumber,
+  register,
+} from "../common/_shared/authService.ts";
 import { corsHeaders } from "../common/_shared/cors.ts";
 
-console.log("Hello from Functions!")
+console.log("Hello from Functions!");
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
-  try{
-    const { phoneNumber, age, gender, airflow, difficultyId } = await req.json()
-    const authHeader = req.headers.get("Authorization")!
-    const firebaseId = getFirebaseId(authHeader)
+  try {
+    const { phoneNumber, age, gender, airflow, difficultyId } =
+      await req.json();
+    const authHeader = req.headers.get("Authorization")!;
+    const firebaseId = getFirebaseId(authHeader);
 
-    if(phoneNumber !== getPhoneNumber(authHeader)) {
-      throw new Error("Authentication Error")
+    if (phoneNumber !== getPhoneNumber(authHeader)) {
+      throw new Error("Authentication Error");
     }
-  
-    const response = await register(firebaseId, phoneNumber, age, gender, airflow, difficultyId)
 
-    return new Response(
-      JSON.stringify(response),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    )
-  }
-  catch(error){
+    const response = await register(
+      firebaseId,
+      phoneNumber,
+      age,
+      gender,
+      airflow,
+      difficultyId,
+    );
+
+    return new Response(JSON.stringify(response), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
     const response = {
-      message : error.message,
-    }
-    return new Response(
-      JSON.stringify(response),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    )
+      message: error.message,
+    };
+    return new Response(JSON.stringify(response), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
-})
+});
 
 /* To invoke locally:
 

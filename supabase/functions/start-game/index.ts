@@ -3,8 +3,8 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { corsHeaders } from "../common/_shared/cors.ts"
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { corsHeaders } from "../common/_shared/cors.ts";
 import { getFirebaseId } from "../common/_shared/authService.ts";
 import { eq } from "npm:drizzle-orm@^0.31.4/expressions";
 import { takeUniqueOrThrow } from "../common/_shared/takeUniqueOrThrow.ts";
@@ -12,43 +12,42 @@ import { db } from "../common/db.ts";
 import { playersTable } from "../common/schema.ts";
 import { startGame } from "../common/_shared/gameSessionService.ts";
 
-console.log("Hello from Functions!")
+console.log("Hello from Functions!");
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
-  try{
-    const body = await req.json()
-    const authHeader = req.headers.get("Authorization")!
-    const firebaseId = getFirebaseId(authHeader)
-    const player = await db.select().from(playersTable).where(eq(playersTable.firebase_id, firebaseId)).then(takeUniqueOrThrow)
-    const playerId = player.id
+  try {
+    const body = await req.json();
+    const authHeader = req.headers.get("Authorization")!;
+    const firebaseId = getFirebaseId(authHeader);
+    const player = await db
+      .select()
+      .from(playersTable)
+      .where(eq(playersTable.firebase_id, firebaseId))
+      .then(takeUniqueOrThrow);
+    const playerId = player.id;
 
-    let gameSession
-    if(body.booster_id === 0) gameSession = await startGame(playerId)
-    else gameSession = await startGame(playerId,body.booster_id)
-  
-    const result = gameSession
-    const response = {message : "Ok",
-      response : result
-    }
+    let gameSession;
+    if (body.booster_id === 0) gameSession = await startGame(playerId);
+    else gameSession = await startGame(playerId, body.booster_id);
 
-    return new Response(
-      JSON.stringify(response),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    )
-  }
-  catch(error){
+    const result = gameSession;
+    const response = { message: "Ok", response: result };
+
+    return new Response(JSON.stringify(response), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
     const response = {
-      message : error.message,
-    }
-    return new Response(
-      JSON.stringify(response),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    )
+      message: error.message,
+    };
+    return new Response(JSON.stringify(response), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
-})
+});
 
 /* To invoke locally:
 

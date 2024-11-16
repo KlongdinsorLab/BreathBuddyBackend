@@ -98,7 +98,6 @@ const seed = async () => {
     console.log("BoostersTable: ", error);
   }
 
-  
   // seeding Levels Table
   console.log("Seeding Levels");
   try {
@@ -129,7 +128,7 @@ const seed = async () => {
         id: 4,
         level: 4,
         score_required: 2125000,
-        boss_id: 3
+        boss_id: 3,
       },
       {
         id: 5,
@@ -146,7 +145,7 @@ const seed = async () => {
         id: 6,
         level: 6,
         score_required: 5190000,
-        boss_id: 4
+        boss_id: 4,
       },
       {
         id: 7,
@@ -185,7 +184,6 @@ const seed = async () => {
   } catch (error) {
     console.log("LevelsTable : ", error);
   }
-
 
   // seeding characters table
   console.log("Seeding Characters...");
