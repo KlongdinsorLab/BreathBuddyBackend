@@ -15,8 +15,6 @@ import {
 import { db } from "../common/db.ts";
 import { corsHeaders } from "../common/_shared/cors.ts";
 
-console.log("Hello from Functions!");
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });

@@ -27,7 +27,7 @@ export async function updateAirflow(playerId: number, airflow: number) {
 
 export async function updateCurrentDifficulty(
   playerId: number,
-  difficultyId: number,
+  difficultyId: number
 ) {
   await db
     .update(playersTable)
@@ -48,7 +48,7 @@ export async function updateUsername(playerId: number, username: string) {
 
 export async function updateSelectedCharacter(
   playerId: number,
-  characterId: number,
+  characterId: number
 ) {
   const characterCheck = await db
     .select()
@@ -56,8 +56,8 @@ export async function updateSelectedCharacter(
     .where(
       and(
         eq(playersCharactersTable.player_id, playerId),
-        eq(playersCharactersTable.character_id, characterId),
-      ),
+        eq(playersCharactersTable.character_id, characterId)
+      )
     );
 
   if (characterCheck.length < 1) {
@@ -126,7 +126,7 @@ export async function getRanking() {
     scoreRanking.map(async (obj) => ({
       ...obj,
       total_game: await getTotalEndedGames(obj.id),
-    })),
+    }))
   );
 
   // Sort By Score
@@ -148,8 +148,8 @@ export async function getRanking() {
         username: string;
         total_score: number;
         total_game: number;
-      },
-    ) => b.total_score - a.total_score,
+      }
+    ) => b.total_score - a.total_score
   );
 
   // const rankingCopy = ranking.sort((a,b) => b.total_game - a.total_game)
@@ -178,8 +178,8 @@ export async function getRanking() {
         username: string;
         total_score: number;
         total_game: number;
-      },
-    ) => b.total_game - a.total_game,
+      }
+    ) => b.total_game - a.total_game
   );
 
   return {
@@ -206,7 +206,7 @@ export async function getPlayer(playerId: number) {
     .then(takeUniqueOrThrow);
   const unlockedCharacters = await getUnlockedCharacters(playerId);
   const unlockedCharactersId = unlockedCharacters.map(
-    (obj) => obj.character_id,
+    (obj) => obj.character_id
   );
 
   return {

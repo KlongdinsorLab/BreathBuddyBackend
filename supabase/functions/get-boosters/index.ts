@@ -11,8 +11,7 @@ import { takeUniqueOrThrow } from "../common/_shared/takeUniqueOrThrow.ts";
 import { db } from "../common/db.ts";
 import { playersTable } from "../common/schema.ts";
 import { getReceivedBoosters } from "../common/_shared/boostersService.ts";
-
-console.log("Hello from Functions!");
+import { logger } from "../common/logger.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -36,6 +35,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
+    logger.error("Error occurred while processing request", error);
+
     const response = {
       message: error.message,
       status: 500,

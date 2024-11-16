@@ -10,8 +10,7 @@ import {
   login,
 } from "../common/_shared/authService.ts";
 import { corsHeaders } from "../common/_shared/cors.ts";
-
-console.log("Hello from Functions!");
+import { logger } from "../common/logger.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -37,6 +36,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
+    logger.error("Error occurred while processing request", error);
+
     const response = {
       message: error.message,
     };

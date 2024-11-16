@@ -12,8 +12,6 @@ import { db } from "../common/db.ts";
 import { playersTable } from "../common/schema.ts";
 import { updateGame } from "../common/_shared/gameSessionService.ts";
 
-console.log("Hello from Functions!");
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -37,6 +35,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
+    logger.error("Error occurred while processing request", error);
+
     const response = {
       message: error.message,
     };
