@@ -76,7 +76,10 @@ export async function checkPlayToday(playerId: number) {
     const gamesPlayedToday = await db
         .select()
         .from(gameSessionsTable)
-        .where(gt(gameSessionsTable.started_at, today))
+        .where(and(
+            eq(gameSessionsTable.player_id,playerId),
+            gt(gameSessionsTable.started_at, today)
+        ))
         .orderBy(desc(gameSessionsTable.started_at))
 
     if(gamesPlayedToday.length >= 10) {
