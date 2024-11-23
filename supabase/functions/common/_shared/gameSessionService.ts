@@ -8,7 +8,7 @@ import { getLevelByScore } from "./levelService.ts";
 import { playersBoostersTable } from "../schema.ts";
 import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
 import { addHours, checkToday } from "./dateService.ts";
-import { or, isNull, gt, and, eq, lte, desc, isNotNull } from "drizzle-orm";
+import { or, isNull, gt, and, eq, lte, desc, isNotNull } from "npm:drizzle-orm@^0.31.4/expressions";
 import { playerBoosterStatusEnum } from "../schema.ts";
 
 type BoosterStatus = 'ACTIVE' | 'USED';
@@ -18,6 +18,8 @@ export async function startGame(playerId: number, boosterId?: number) {
     const currentDifficultyId = await getCurrentDifficulty(playerId);
     const boosterDrop = await getRandomBooster()
     const bossId = await getRandomBoss(playerId)
+
+    await checkPlayToday(playerId)
 
     await db.transaction(async (tx) => {
         if (boosterId) {
@@ -64,6 +66,33 @@ export async function startGame(playerId: number, boosterId?: number) {
     booster_drop_duration : boosterDrop.duration,
     boss_id : bossId
   }
+}
+
+export async function checkPlayToday(playerId: number) {
+    const now = new Date()
+    const today = new Date()
+    today.setHours(0,0,0,0)
+    
+    const gamesPlayedToday = await db
+        .select()
+        .from(gameSessionsTable)
+        .where(and(
+            eq(gameSessionsTable.player_id,playerId),
+            gt(gameSessionsTable.started_at, today)
+        ))
+        .orderBy(desc(gameSessionsTable.started_at))
+
+    if(gamesPlayedToday.length >= 10) {
+        throw new Error("More than 10 games played today")
+    }
+
+    if(gamesPlayedToday.length >= 2
+    ){
+        const milliDiff = now.getTime() - gamesPlayedToday[1].started_at.getTime()
+        if(milliDiff < 7200000) { // 2 hours 
+            throw new Error("Heart is not recharged.")
+        } 
+    }
 }
 
 export async function cancelGame(playerId: number) {
