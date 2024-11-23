@@ -2,13 +2,14 @@ import { db } from "../db.ts";
 import { playersBoostersTable } from "../schema.ts";
 import {
   and,
-  eq,
   desc,
+  eq,
   gt,
-  or,
   isNull,
+  or,
 } from "npm:drizzle-orm@^0.31.4/expressions";
 import { playersBoostersInterface } from "./interfaces.ts";
+import { logger } from "../logger.ts";
 
 // Booster Bag and Redeem Booster use different JSON formats
 export async function getBoosterRedeem(playerId: number) {
@@ -27,23 +28,24 @@ export async function getBoosterRedeem(playerId: number) {
       ),
     )
     .orderBy(playersBoostersTable.expired_at);
-  console.log(playerBoostersList);
+  logger.debug(`${playerBoostersList}`);
 
   const boosterListJson = [
-    { boosterId: 1, expireDate: <Date[]>[], amount: 0 },
-    { boosterId: 2, expireDate: <Date[]>[], amount: 0 },
-    { boosterId: 3, expireDate: <Date[]>[], amount: 0 },
-    { boosterId: 4, expireDate: <Date[]>[], amount: 0 },
-    { boosterId: 5, expireDate: <Date[]>[], amount: 0 },
-    { boosterId: 6, expireDate: <Date[]>[], amount: 0 },
-    { boosterId: 7, expireDate: <Date[]>[], amount: 0 },
+    { boosterId: 1, expireDate: <Date[]> [], amount: 0 },
+    { boosterId: 2, expireDate: <Date[]> [], amount: 0 },
+    { boosterId: 3, expireDate: <Date[]> [], amount: 0 },
+    { boosterId: 4, expireDate: <Date[]> [], amount: 0 },
+    { boosterId: 5, expireDate: <Date[]> [], amount: 0 },
+    { boosterId: 6, expireDate: <Date[]> [], amount: 0 },
+    { boosterId: 7, expireDate: <Date[]> [], amount: 0 },
   ];
 
   playerBoostersList.forEach((element: playersBoostersInterface) => {
-    if (element.expired_at !== null)
+    if (element.expired_at !== null) {
       boosterListJson[element.booster_id - 1].expireDate.push(
         element.expired_at,
       );
+    }
 
     boosterListJson[element.booster_id - 1].amount += 1;
   });
@@ -89,7 +91,7 @@ export async function useBooster(playerId: number, boosterId: number) {
     )
     .orderBy(playersBoostersTable.expired_at);
 
-  console.log(availableBoosters);
+  logger.debug(`availableBooster: ${availableBoosters}`);
 
   if (availableBoosters.length === 0) throw new Error("No booster to use");
 

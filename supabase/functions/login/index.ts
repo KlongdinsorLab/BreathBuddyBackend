@@ -32,6 +32,11 @@ Deno.serve(async (req) => {
       message: "Ok",
       response: authHeader.replace("Bearer ", ""),
     };
+
+    logger.info(
+      `API call to ${req.url} with method ${req.method}. Data modification performed. Request details: ${req.json()}`,
+    );
+
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -32,6 +32,11 @@ Deno.serve(async (req) => {
 
     const response = { message: "Ok", response: result };
 
+    logger.verbose(
+      `API call to ${req.url} with method GET. Data retrieval. Response Data: ${response}`,
+    );
+    logger.debug(`Player_${playerId} unlocked character: ${result}`);
+
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

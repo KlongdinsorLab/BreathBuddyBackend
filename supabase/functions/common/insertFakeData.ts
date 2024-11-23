@@ -1,7 +1,8 @@
-import { playersTable, gameSessionsTable } from "./schema.ts";
+import { gameSessionsTable, playersTable } from "./schema.ts";
 import postgres from "npm:postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { config } from "https://deno.land/x/dotenv@v3.2.0/mod.ts";
+import { logger } from "./logger.ts";
 
 const env = config();
 
@@ -17,7 +18,7 @@ const db = drizzle(client);
 // run by $ deno run .\supabase\functions\common\insertFakeData.ts
 const insertFakeData = async () => {
   // seeding players Table
-  console.log("Inserting Players...");
+  logger.debug("Inserting Players...");
   try {
     await db.insert(playersTable).values([
       {
@@ -35,13 +36,13 @@ const insertFakeData = async () => {
         selected_character_id: 1,
       },
     ]);
-    console.log("Insert Players Done");
+    logger.debug("Insert Players Done");
   } catch (error) {
-    console.log("PlayersTable: ", error);
+    logger.error("PlayersTable: ", error);
   }
 
   // seeding gameSessions table
-  console.log("Inserting GameSession...");
+  logger.debug("Inserting GameSession...");
   try {
     await db.insert(gameSessionsTable).values({
       id: 1,
@@ -53,17 +54,17 @@ const insertFakeData = async () => {
       status: "ACTIVE",
       lap: 4,
     });
-    console.log("Insert GameSession Done");
+    logger.debug("Insert GameSession Done");
   } catch (error) {
-    console.log("GameSessionsTable: ", error);
+    logger.error("GameSessionsTable: ", error);
   }
 };
 
-console.log("Insert Fake Data Start");
+logger.debug("Insert Fake Data Start");
 insertFakeData()
   .catch((e) => {
     console.error(e);
   })
   .finally(() => {
-    console.log("Insert Fake Data Done");
+    logger.debug("Insert Fake Data Done");
   });

@@ -6,7 +6,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { getFirebaseId } from "../common/_shared/authService.ts";
 import { db } from "../common/db.ts";
-import { playersTable, vasTable, gameSessionsTable } from "../common/schema.ts";
+import { gameSessionsTable, playersTable, vasTable } from "../common/schema.ts";
 import { eq } from "npm:drizzle-orm@^0.31.4/expressions";
 import { takeUniqueOrThrow } from "../common/_shared/takeUniqueOrThrow.ts";
 import { updateAirflow } from "../common/_shared/playerService.ts";
@@ -40,22 +40,27 @@ Deno.serve(async (req) => {
       .where(eq(vasTable.player_id, playerId));
     let totalVas = vases.length;
 
-    console.log("totalVas: ", totalVas);
-    console.log("totalIdealVas: ", totalIdealVas);
+    logger.debug(`totalVas: ${totalVas}`);
+    logger.debug(`totalIdealVas:  ${totalIdealVas}`);
+
     if (totalIdealVas <= totalVas) {
       throw new Error(
-        "You need to complete more game sessions to submit your VAS score"
+        "You need to complete more game sessions to submit your VAS score",
       );
     }
 
     while (totalIdealVas - 1 > totalVas) {
       await db.insert(vasTable).values({ player_id: playerId, vas_score: 0 });
-      console.log("totalVas in while loop: ", totalVas);
+      logger.debug(`totalVas in while loop: ${totalVas}`);
       totalVas += 1;
     }
 
     await db.insert(vasTable).values({ player_id: playerId, vas_score: vas });
     const response = { message: "OK" };
+
+    logger.info(
+      `API call to ${req.url} with method ${req.method}. Data modification performed. Request details: ${req.json()}`,
+    );
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

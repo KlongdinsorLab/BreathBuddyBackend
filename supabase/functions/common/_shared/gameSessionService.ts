@@ -16,8 +16,9 @@ import { getLevelByScore } from "./levelService.ts";
 import { playersBoostersTable } from "../schema.ts";
 import { takeUniqueOrThrow } from "./takeUniqueOrThrow.ts";
 import { addHours, checkToday } from "./dateService.ts";
-import { or, isNull, gt, and, eq, lte, desc, isNotNull } from "drizzle-orm";
+import { and, desc, eq, gt, isNotNull, isNull, lte, or } from "drizzle-orm";
 import { playerBoosterStatusEnum } from "../schema.ts";
+import { logger } from "../logger.ts";
 
 type BoosterStatus = "ACTIVE" | "USED";
 
@@ -47,7 +48,7 @@ export async function startGame(playerId: number, boosterId?: number) {
         )
         .orderBy(playersBoostersTable.expired_at);
 
-      console.log(availableBoosters);
+      logger.debug(`Available achievements: ${availableBoosters}`);
 
       if (availableBoosters.length === 0) throw new Error("No booster to use");
 
@@ -57,17 +58,24 @@ export async function startGame(playerId: number, boosterId?: number) {
         .where(eq(playersBoostersTable.id, availableBoosters[0].id));
     }
 
-    await tx.insert(gameSessionsTable).values({
+    const gameSession = await tx.insert(gameSessionsTable).values({
       player_id: playerId,
       difficulty_id: currentDifficultyId,
       boss_id: bossId,
       booster_drop_id: boosterDrop.id,
-      booster_drop_duration:
-        boosterDrop.duration === 0 ? null : boosterDrop.duration,
+      booster_drop_duration: boosterDrop.duration === 0
+        ? null
+        : boosterDrop.duration,
       score: 0,
       lap: 1,
       status: "ACTIVE",
-    });
+    })
+      .returning()
+      .then(takeUniqueOrThrow);
+
+    logger.info(
+      `Game session ${gameSession.id} start successfully`,
+    );
   });
   return {
     booster_drop_id: boosterDrop.id,
@@ -77,7 +85,7 @@ export async function startGame(playerId: number, boosterId?: number) {
 }
 
 export async function cancelGame(playerId: number) {
-  await db
+  const gameSession = await db
     .update(gameSessionsTable)
     .set({
       status: "CANCEL",
@@ -88,7 +96,13 @@ export async function cancelGame(playerId: number) {
         eq(gameSessionsTable.status, "ACTIVE"),
         eq(gameSessionsTable.player_id, playerId),
       ),
-    );
+    )
+    .returning()
+    .then(takeUniqueOrThrow);
+
+  logger.info(
+    `Game session ${gameSession.id} cancel successfully`,
+  );
 }
 
 export async function updateGame(playerId: number, score: number, lap: number) {
@@ -107,8 +121,13 @@ export async function updateGame(playerId: number, score: number, lap: number) {
     )
     .returning();
 
-  if (updatedGame.length === 0)
+  if (updatedGame.length === 0) {
     throw new Error("No Currently Active Game to Update");
+  }
+
+  logger.info(
+    `Game session ${updatedGame[updateGame.length - 1].id} update successfully`,
+  );
 }
 
 export async function finishGame(
@@ -122,6 +141,7 @@ export async function finishGame(
 
   let boosterDropId: number = 0;
   const now = new Date();
+
   await db.transaction(async (tx) => {
     const game = await tx
       .update(gameSessionsTable)
@@ -141,19 +161,21 @@ export async function finishGame(
       .returning()
       .then(takeUniqueOrThrow);
 
-    console.log(game);
+    logger.info(`Game session ${game.id} finish successfully`);
 
     if (isBoosterReceived) {
       await tx.insert(playersBoostersTable).values({
         player_id: playerId,
         booster_id: game.booster_drop_id,
-        expired_at:
-          game.booster_drop_duration === null
-            ? null
-            : addHours(now, game.booster_drop_duration),
+        expired_at: game.booster_drop_duration === null
+          ? null
+          : addHours(now, game.booster_drop_duration),
         status: "ACTIVE",
       });
     }
+    logger.debug(
+      `Player_${playerId} booster updated: booster_id_${game.booster_drop_id}`,
+    );
     boosterDropId = game.booster_drop_id;
   });
 
@@ -166,11 +188,13 @@ export async function finishGame(
     .from(levelsTable)
     .where(lte(levelsTable.score_required, playerTotalScore + score))
     .orderBy(desc(levelsTable.score_required));
-  console.log("Game Session Service : " + level[0]);
   const newLevel = level[0];
 
   const oldLevel = await getLevelByScore(playerTotalScore);
-  const isLevelUp: boolean = newLevel.level !== oldLevel.level;
+  const isLevelUp: boolean = newLevel.level !== oldLevel.level.level;
+  if (isLevelUp) {
+    logger.debug(`Player level up: ${newLevel.level}`);
+  }
 
   await db.transaction(async (tx) => {
     await tx
@@ -189,6 +213,7 @@ export async function finishGame(
       booster_amount_2,
       booster_amount_3,
     } = newLevel;
+
     const isNewLevelGiveBoosters = booster_id_1 && booster_id_2 && booster_id_3;
 
     if (isLevelUp && isNewLevelGiveBoosters) {
@@ -214,6 +239,7 @@ export async function finishGame(
         .insert(playersBoostersTable)
         .values([...boosterArray1, ...boosterArray2, ...boosterArray3]);
     }
+    logger.debug("Update booster from level up successfully");
   });
 
   return {
@@ -255,7 +281,7 @@ export async function getGamesPlayedToday(playerId: number) {
     .orderBy(gameSessionsTable.started_at);
   const now = new Date();
   const gamesPlayedToday = allGames.filter((gameSession) =>
-    checkToday(gameSession.started_at),
+    checkToday(gameSession.started_at)
   );
   const gamesPlayedTodayTime = gamesPlayedToday.map((game) => game.started_at);
 
@@ -352,14 +378,14 @@ export async function checkCanceledGame(playerId: number) {
 
     const playerTotalScore = player.total_score;
     const score = canceledGame.score;
-    console.log(playerTotalScore);
-    console.log(score);
+    logger.debug(`player total score: ${playerTotalScore}`);
+    logger.debug(`score: ${score}`);
     const level = await db
       .select()
       .from(levelsTable)
       .where(lte(levelsTable.score_required, playerTotalScore + score))
       .orderBy(desc(levelsTable.score_required));
-    console.log("Game Session Service : " + level[0]);
+    logger.debug(`Game Session Service : ${level[0]}`);
     const newLevel = level[0];
 
     const oldLevel = await getLevelByScore(playerTotalScore);

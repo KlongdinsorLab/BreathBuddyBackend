@@ -18,8 +18,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { phoneNumber, age, gender, airflow, difficultyId } =
-      await req.json();
+    const { phoneNumber, age, gender, airflow, difficultyId } = await req
+      .json();
     const authHeader = req.headers.get("Authorization")!;
     const firebaseId = getFirebaseId(authHeader);
 
@@ -33,7 +33,11 @@ Deno.serve(async (req) => {
       age,
       gender,
       airflow,
-      difficultyId
+      difficultyId,
+    );
+
+    logger.info(
+      `API call to ${req.url} with method ${req.method}. Data modification performed. Request details: ${req.json()}`,
     );
 
     return new Response(JSON.stringify(response), {

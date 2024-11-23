@@ -14,6 +14,7 @@ import {
 } from "../common/schema.ts";
 import { db } from "../common/db.ts";
 import { corsHeaders } from "../common/_shared/cors.ts";
+import { logger } from "../common/logger.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -23,37 +24,37 @@ Deno.serve(async (req) => {
   try {
     await addCharacters();
   } catch (e) {
-    console.log(e.message);
+    logger.error(e.message);
   }
 
   try {
     await addDifficulties();
   } catch (e) {
-    console.log(e.message);
+    logger.error(e.message);
   }
 
   try {
     await addBosses();
   } catch (e) {
-    console.log(e.message);
+    logger.error(e.message);
   }
 
   try {
     await addBoosters();
   } catch (e) {
-    console.log(e.message);
+    logger.error(e.message);
   }
 
   try {
     await addAchievements();
   } catch (e) {
-    console.log(e.message);
+    logger.error(e.message);
   }
 
   try {
     await addLevels();
   } catch (e) {
-    console.log(e.message);
+    logger.error(e.message);
   }
 
   const data = {

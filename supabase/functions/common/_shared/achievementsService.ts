@@ -14,6 +14,7 @@ import {
 } from "../schema.ts";
 import { playersBoostersTable } from "../schema.ts";
 import { boostersTable } from "../schema.ts";
+import { logger } from "../logger.ts";
 
 interface achievementInterface {
   id: number;
@@ -353,25 +354,22 @@ export async function checkAchievement(
   let unlock: boolean = true;
 
   if (achievement.accumulative_score !== null) {
-    unlock =
-      unlock && checkAchievementScore(playerId, achievement, gameSessionList);
+    unlock = unlock &&
+      checkAchievementScore(playerId, achievement, gameSessionList);
   }
 
   if (achievement.games_played !== null) {
-    unlock =
-      unlock &&
+    unlock = unlock &&
       checkAchievementTotalGames(playerId, achievement, gameSessionList);
   }
 
   if (achievement.boss_id !== null) {
-    unlock =
-      unlock &&
+    unlock = unlock &&
       checkAchievementBossEncounters(playerId, achievement, gameSessionList);
   }
 
   if (achievement.characters_unlocked) {
-    unlock =
-      unlock &&
+    unlock = unlock &&
       checkAchievementCharactersUnlocked(
         playerId,
         achievement,
@@ -380,20 +378,17 @@ export async function checkAchievement(
   }
 
   if (achievement.boosters_number) {
-    unlock =
-      unlock &&
+    unlock = unlock &&
       checkAchievementBoosters(playerId, achievement, playersBoostersList);
   }
 
   if (achievement.games_played_in_a_day) {
-    unlock =
-      unlock &&
+    unlock = unlock &&
       checkAchievementGamesPlayedInADay(playerId, achievement, gameSessionList);
   }
 
   if (achievement.games_played_consecutive_days) {
-    unlock =
-      unlock &&
+    unlock = unlock &&
       checkAchievementGamesPlayedConsecutiveDay(
         playerId,
         achievement,
@@ -424,15 +419,16 @@ export function checkAchievementScore(
     playerId === null ||
     achievement.id === null ||
     achievement.accumulative_score === null
-  )
+  ) {
     return false;
+  }
 
   let totalScore = 0;
   gameSessionList.forEach((element) => {
     totalScore += element.score ?? 0;
   });
 
-  console.log(
+  logger.debug(
     "Score Requied : " +
       achievement.accumulative_score +
       "\nPlayer Score : " +
@@ -440,10 +436,10 @@ export function checkAchievementScore(
   );
 
   if (totalScore >= achievement.accumulative_score!) {
-    console.log(true);
+    logger.debug(`checkAchievementScore: ${true}`);
     return true;
   } else {
-    console.log(false);
+    logger.debug(`checkAchievementScore: ${false}`);
     return false;
   }
 }
@@ -457,14 +453,15 @@ export function checkAchievementTotalGames(
     playerId === null ||
     achievement.id === null ||
     achievement.games_played === null
-  )
+  ) {
     return false;
+  }
 
   const endedGameSessionList = gameSessionList.filter(
     (element) => element.status === "END",
   );
 
-  console.log(
+  logger.debug(
     "Game Required : " +
       achievement.games_played +
       "\nGame Finished : " +
@@ -485,14 +482,15 @@ export function checkAchievementBossEncounters(
     achievement.id === null ||
     achievement.boss_id === null ||
     achievement.boss_encounter === null
-  )
+  ) {
     return false;
+  }
 
   const bossGameSessionList = gameSessionList.filter(
     (element) => element.boss_id === achievement.boss_id,
   );
 
-  console.log(
+  logger.debug(
     "Boss " +
       achievement.boss_id +
       " Required : " +
@@ -515,19 +513,20 @@ export function checkAchievementCharactersUnlocked(
     playerId === null ||
     achievement.id === null ||
     achievement.characters_unlocked === null
-  )
+  ) {
     return false;
+  }
 
-  console.log(
+  logger.debug(
     "Character Required : " +
       achievement.characters_unlocked +
       "\nCharacter Unlocked : " +
       playersChractersList.length,
   );
 
-  if (playersChractersList.length >= achievement.characters_unlocked!)
+  if (playersChractersList.length >= achievement.characters_unlocked!) {
     return true;
-  else return false;
+  } else return false;
 }
 
 export function checkAchievementBoosters(
@@ -540,8 +539,9 @@ export function checkAchievementBoosters(
     achievement.boosters_number === null ||
     achievement.id === null ||
     achievement.booster_action === null
-  )
+  ) {
     return false;
+  }
 
   let totalNumber: number = playersBoostersList.length;
   if (achievement.booster_action === "USE") {
@@ -563,7 +563,7 @@ export function checkAchievementBoosters(
       ...new Set(playersBoostersList.map((item) => item.booster_id)),
     ];
     totalNumber = uniqueBoosterList.length;
-    console.log(uniqueBoosterList);
+    logger.debug(`${uniqueBoosterList}`);
   }
 
   if (totalNumber >= achievement.boosters_number!) return true;
@@ -604,13 +604,13 @@ export function checkAchievementGamesPlayedInADay(
     max = count;
   }
 
-  console.log(
+  logger.debug(
     "Games in a Day Required : " +
       achievement.games_played_in_a_day +
       "\nGames played in a day : " +
       max,
   );
-  console.log(max >= achievement.games_played_in_a_day!);
+  logger.debug(`${max >= achievement.games_played_in_a_day!}`);
 
   return max >= achievement.games_played_in_a_day!;
 
@@ -658,13 +658,13 @@ export function checkAchievementGamesPlayedConsecutiveDay(
     max = count;
   }
 
-  console.log(
+  logger.debug(
     "Consecutive Days Required : " +
       achievement.games_played_consecutive_days +
       "\nPlayer's Consecutive Days : " +
       max,
   );
-  console.log(max >= achievement.games_played_consecutive_days!);
+  logger.debug(`${max >= achievement.games_played_consecutive_days!}`);
 
   return max >= achievement.games_played_consecutive_days!;
   // TODO

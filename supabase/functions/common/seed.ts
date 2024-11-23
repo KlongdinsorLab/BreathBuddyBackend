@@ -1,14 +1,15 @@
 import {
-  bossesTable,
+  achievementsTable,
   boostersTable,
+  bossesTable,
   charactersTable,
   difficultiesTable,
-  achievementsTable,
   levelsTable,
 } from "./schema.ts";
 import postgres from "npm:postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { config } from "https://deno.land/x/dotenv@v3.2.0/mod.ts";
+import { logger } from "./logger.ts";
 
 const env = config();
 
@@ -24,7 +25,7 @@ const db = drizzle(client);
 // run by $ deno run .\supabase\functions\common\seed.ts
 const seed = async () => {
   // seeding Bosses Table
-  console.log("Seeding Bosses...");
+  logger.debug("Seeding Bosses...");
   try {
     await db.insert(bossesTable).values([
       {
@@ -48,13 +49,13 @@ const seed = async () => {
         name: "ไก่ทอด",
       },
     ]);
-    console.log("Seed Bosses Done");
+    logger.debug("Seed Bosses Done");
   } catch (error) {
-    console.log("BossesTable: ", error);
+    logger.error("BossesTable: ", error);
   }
 
   // seeding boosters Table
-  console.log("Seeding Boosters...");
+  logger.debug("Seeding Boosters...");
   try {
     await db.insert(boostersTable).values([
       {
@@ -93,13 +94,13 @@ const seed = async () => {
         type: "RARE",
       },
     ]);
-    console.log("Seed Boosters Done");
+    logger.debug("Seed Boosters Done");
   } catch (error) {
-    console.log("BoostersTable: ", error);
+    logger.error("BoostersTable: ", error);
   }
 
   // seeding Levels Table
-  console.log("Seeding Levels");
+  logger.debug("Seeding Levels");
   try {
     await db.insert(levelsTable).values([
       {
@@ -180,13 +181,13 @@ const seed = async () => {
         score_required: 28050000,
       },
     ]);
-    console.log("Seed Levels Done");
+    logger.debug("Seed Levels Done");
   } catch (error) {
-    console.log("LevelsTable : ", error);
+    logger.error("LevelsTable : ", error);
   }
 
   // seeding characters table
-  console.log("Seeding Characters...");
+  logger.debug("Seeding Characters...");
   try {
     await db.insert(charactersTable).values([
       {
@@ -214,13 +215,13 @@ const seed = async () => {
         achievement_number_required: 12,
       },
     ]);
-    console.log("Seed Characters Done");
+    logger.debug("Seed Characters Done");
   } catch (error) {
-    console.log("CharactersTable: ", error);
+    logger.error("CharactersTable: ", error);
   }
 
   // seeding difficulties table
-  console.log("Seeding Difficulties...");
+  logger.debug("Seeding Difficulties...");
   try {
     await db.insert(difficultiesTable).values([
       {
@@ -239,13 +240,13 @@ const seed = async () => {
         inhale_second: 2,
       },
     ]);
-    console.log("Seed Difficulties Done");
+    logger.debug("Seed Difficulties Done");
   } catch (error) {
-    console.log("DifficultiesTable: ", error);
+    logger.error("DifficultiesTable: ", error);
   }
 
   // seeding Achievements Table
-  console.log("Seeding Achievements...");
+  logger.debug("Seeding Achievements...");
   try {
     await db.insert(achievementsTable).values([
       {
@@ -344,17 +345,17 @@ const seed = async () => {
         characters_unlocked: 4,
       },
     ]);
-    console.log("Seed Achievements Done");
+    logger.debug("Seed Achievements Done");
   } catch (error) {
-    console.log("AchievementsTable : ", error);
+    logger.error("AchievementsTable : ", error);
   }
 };
 
-console.log("Seed Start");
+logger.debug("Seed Start");
 seed()
   .catch((e) => {
     console.error(e);
   })
   .finally(() => {
-    console.log("Seed Done");
+    logger.debug("Seed Done");
   });

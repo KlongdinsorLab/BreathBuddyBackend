@@ -34,10 +34,14 @@ Deno.serve(async (req) => {
       score,
       playerTotalScore,
       lap,
-      is_booster_received
+      is_booster_received,
     );
 
     const response = { message: "Ok", response: result };
+
+    logger.info(
+      `API call to ${req.url} with method ${req.method}. Data modification performed. Request details: ${req.json()}`,
+    );
 
     return new Response(JSON.stringify(response), {
       status: 200,

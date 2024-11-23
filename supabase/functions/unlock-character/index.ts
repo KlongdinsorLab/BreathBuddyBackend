@@ -35,6 +35,10 @@ Deno.serve(async (req) => {
     await unlockCharacter(playerId, character_id);
     const response = { message: "OK" };
 
+    logger.info(
+      `API call to ${req.url} with method ${req.method}. Data modification performed. Request details: ${req.json()}`,
+    );
+
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
