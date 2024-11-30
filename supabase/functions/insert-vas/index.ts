@@ -9,8 +9,23 @@ import { db } from "../common/db.ts";
 import { playersTable, vasTable, gameSessionsTable } from "../common/schema.ts";
 import { eq } from "npm:drizzle-orm@^0.31.4/expressions";
 import { takeUniqueOrThrow } from "../common/_shared/takeUniqueOrThrow.ts";
-import { updateAirflow } from "../common/_shared/playerService.ts";
 import { corsHeaders } from "../common/_shared/cors.ts";
+import * as Sentry from "https://deno.land/x/sentry@8.41.0-beta.1/index.mjs";
+
+Sentry.init({
+    // https://docs.sentry.io/product/sentry-basics/concepts/dsn-explainer/#where-to-find-your-dsn
+    dsn: Deno.env.get('SENTRY_DSN'),
+    debug: true,
+    defaultIntegrations: false,
+    // Performance Monitoring
+    tracesSampleRate: 1.0,
+    // Set sampling rate for profiling - this is relative to tracesSampleRate
+    // profilesSampleRate: 1.0,
+  })
+
+// Set region and execution_id as custom tags
+Sentry.setTag('region', Deno.env.get('SB_REGION') || 'unknown')
+Sentry.setTag('execution_id', Deno.env.get('SB_EXECUTION_ID') || 'unknown')
 
 console.log("Hello from Functions!")
 
@@ -51,12 +66,17 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders,"Content-Type": "application/json" } },
     )
   }
-  catch(e){
-    const response = {message : e.message}
-
+  catch(error){
+    Sentry.captureException(error)
+    const response = {
+      message : error.message,
+    }
     return new Response(
       JSON.stringify(response),
-      { headers: { ...corsHeaders,"Content-Type": "application/json" } },
+      { 
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      },
     )
   }
 
