@@ -72,15 +72,15 @@ https://supabase.com/docs/guides/cli/local-development
 ### Setup for Production
 1. Define these values in Github secrets.
    - SUPABASE_ACCES_TOKEN_PROD
-         - This can be found in Account --> Access Tokens in Supabase Dashboard
+     - This can be found in Account --> Access Tokens in Supabase Dashboard
    - SUPABASE_DB_PASSWORD_PROD
-         - This can be found in [Project Name] --> Project Settings --> Configuration --> Database --> Database Password in Supabase Dashboard
+        - This can be found in [Project Name] --> Project Settings --> Configuration --> Database --> Database Password in Supabase Dashboard
    - SUPABASE_PROJECT_ID_PROD
-         - To retrieve Project ID, go to dashboard of the Supabase Project. The project ID should be in the URL. (https://supabase.com/dashboard/project/[YOUR PROJECT ID])
+        - To retrieve Project ID, go to dashboard of the Supabase Project. The project ID should be in the URL. (https://supabase.com/dashboard/project/[YOUR PROJECT ID])
    - DATABASE_URL_PROD
-         - This can be found in [Project Name] --> Project Settings --> Configuration --> Database --> Connection String --> URI in Supabase Dashboard. Replace [YOUR-PASSWORD] with the actual db password.
+        - This can be found in [Project Name] --> Project Settings --> Configuration --> Database --> Connection String --> URI in Supabase Dashboard. Replace [YOUR-PASSWORD] with the actual db password.
    - SENTRY_DSN
-         - This can be found in [Project Name] --> Setting --> Client Keys (DSN) --> DSN in Sentry Dashboard.
+        - This can be found in [Project Name] --> Setting --> Client Keys (DSN) --> DSN in Sentry Dashboard.
 
 2. Merge from branch ```develop``` to ```main```.
 3. Make sure that ```dbpush``` and ```deploy``` workflows run without any error.
