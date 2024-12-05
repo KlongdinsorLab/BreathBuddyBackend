@@ -14,8 +14,7 @@ import { takeUniqueOrThrow } from "../common/_shared/takeUniqueOrThrow.ts";
 import { db } from "../common/db.ts";
 import { playersTable } from "../common/schema.ts";
 import { corsHeaders } from "../common/_shared/cors.ts";
-
-console.log("Hello from Functions!");
+import { logger } from "../common/logger.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -36,10 +35,16 @@ Deno.serve(async (req) => {
     await unlockCharacter(playerId, character_id);
     const response = { message: "OK" };
 
+    logger.info(
+      `API call to ${req.url} with method ${req.method}. Data modification performed. Request details: ${req.json()}`,
+    );
+
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
+    logger.error("Error occurred while processing request", error);
+
     const response = { message: error.message, status: 500 };
 
     return new Response(JSON.stringify(response), {

@@ -12,8 +12,7 @@ import { db } from "../common/db.ts";
 import { playersTable } from "../common/schema.ts";
 import { getReceivedBoosters } from "../common/_shared/boostersService.ts";
 import { getUnlockedCharacters } from "../common/_shared/playerService.ts";
-
-console.log("Hello from Functions!");
+import { logger } from "../common/logger.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -33,10 +32,17 @@ Deno.serve(async (req) => {
 
     const response = { message: "Ok", response: result };
 
+    logger.verbose(
+      `API call to ${req.url} with method GET. Data retrieval. Response Data: ${response}`,
+    );
+    logger.debug(`Player_${playerId} unlocked character: ${result}`);
+
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
+    logger.error("Error occurred while processing request", error);
+
     const response = {
       message: error.message,
       status: 500,

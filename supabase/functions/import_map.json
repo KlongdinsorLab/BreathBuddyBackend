@@ -1,8 +1,8 @@
 {
-    "imports": {
-        "shared/": "./functions/_shared/",
-        "firebase-admin": "npm:firebase-admin@12.0.0",
-        "drizzle-orm": "npm:drizzle-orm@0.31.4",
-        "drizzle-orm/": "npm:/drizzle-orm@0.31.4/"
-    }
+  "imports": {
+    "shared/": "./functions/_shared/",
+    "firebase-admin": "npm:firebase-admin@12.0.0",
+    "drizzle-orm": "npm:drizzle-orm@0.31.4",
+    "drizzle-orm/": "npm:/drizzle-orm@0.31.4/"
+  }
 }

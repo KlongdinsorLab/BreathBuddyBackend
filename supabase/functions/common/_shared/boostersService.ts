@@ -10,8 +10,8 @@ export const getReceivedBoosters = async (playerId: number) => {
     .where(
       and(
         eq(playersBoostersTable.player_id, playerId),
-        eq(playersBoostersTable.status, "ACTIVE")
-      )
+        eq(playersBoostersTable.status, "ACTIVE"),
+      ),
     );
 
   return boosters;

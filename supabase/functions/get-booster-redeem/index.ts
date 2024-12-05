@@ -3,7 +3,7 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { eq } from "npm:drizzle-orm@^0.31.4";
 import { getFirebaseId } from "../common/_shared/authService.ts";
 import { corsHeaders } from "../common/_shared/cors.ts";
@@ -11,40 +11,47 @@ import { takeUniqueOrThrow } from "../common/_shared/takeUniqueOrThrow.ts";
 import { db } from "../common/db.ts";
 import { playersTable } from "../common/schema.ts";
 import { getBoosterRedeem } from "../common/_shared/boosterService.ts";
-
-console.log("Hello from Functions!")
+import { logger } from "../common/logger.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
-  try{
-    const authHeader = req.headers.get("Authorization")!
-    const firebaseId = getFirebaseId(authHeader)
-    const player = await db.select().from(playersTable).where(eq(playersTable.firebase_id, firebaseId)).then(takeUniqueOrThrow)
-    const playerId = player.id
+  try {
+    const authHeader = req.headers.get("Authorization")!;
+    const firebaseId = getFirebaseId(authHeader);
+    const player = await db
+      .select()
+      .from(playersTable)
+      .where(eq(playersTable.firebase_id, firebaseId))
+      .then(takeUniqueOrThrow);
+    const playerId = player.id;
 
-    const result = await getBoosterRedeem(playerId)
-  
-    const response = {message : "Ok", 
-      response : result
-    }
+    const result = await getBoosterRedeem(playerId);
 
-    return new Response(
-      JSON.stringify(response),
-      {status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    )
-  }
-  catch(error){
+    const response = { message: "Ok", response: result };
+
+    logger.verbose(
+      `API call to ${req.url} with method GET. Data retrieval. Response Data: ${response}`,
+    );
+    logger.debug(`Player_${playerId} booster redeem: ${result}`);
+
+    return new Response(JSON.stringify(response), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    logger.error("Error occurred while processing request", error);
+
     const response = {
-      error : error.message,
-    }
-    return new Response(
-      JSON.stringify(response),
-      {status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    )
+      error: error.message,
+    };
+    return new Response(JSON.stringify(response), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
-})
+});
 
 /* To invoke locally:
 
