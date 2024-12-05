@@ -59,7 +59,7 @@ export async function startGame(playerId: number, boosterId?: number) {
         )
         .orderBy(playersBoostersTable.expired_at);
 
-      logger.debug(`Available achievements: ${availableBoosters}`);
+      logger.debug(`Available Boosters: ${availableBoosters}`);
 
       if (availableBoosters.length === 0) throw new Error("No booster to use");
 
