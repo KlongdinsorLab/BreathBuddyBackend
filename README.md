@@ -76,7 +76,7 @@ https://supabase.com/docs/guides/cli/local-development
    - SUPABASE_DB_PASSWORD_PROD
         - This can be found in [Project Name] --> Project Settings --> Configuration --> Database --> Database Password in Supabase Dashboard
    - SUPABASE_PROJECT_ID_PROD
-        - To retrieve Project ID, go to dashboard of the Supabase Project. The project ID should be in the URL. (https://supabase.com/dashboard/project/[YOUR PROJECT ID])
+        - To retrieve Project ID, go to dashboard of the Supabase Project. The project ID should be in the URL. (https://supabase.com/dashboard/project/[YOUR-PROJECT-ID])
    - DATABASE_URL_PROD
         - This can be found in [Project Name] --> Project Settings --> Configuration --> Database --> Connection String --> URI in Supabase Dashboard. Replace [YOUR-PASSWORD] with the actual db password.
    - SENTRY_DSN
