@@ -79,10 +79,14 @@ https://supabase.com/docs/guides/cli/local-development
         - To retrieve Project ID, go to dashboard of the Supabase Project. The project ID should be in the URL. (https://supabase.com/dashboard/project/[YOUR-PROJECT-ID])
    - DATABASE_URL_PROD
         - This can be found in [Project Name] --> Project Settings --> Configuration --> Database --> Connection String --> URI in Supabase Dashboard. Replace [YOUR-PASSWORD] with the actual db password.
-   - SENTRY_DSN
-        - This can be found in [Project Name] --> Setting --> Client Keys (DSN) --> DSN in Sentry Dashboard.
 
-2. Merge from branch ```develop``` to ```main```.
-3. Make sure that ```dbpush``` and ```deploy``` workflows run without any error.
-4. Define DATABASE_URL in .env in a local editor.
-5. In a local editor, run seed.ts by using command. ```deno run .\supabase\functions\common\seed.ts```
+2. Define SENTRY_DSN in Supabase Secrets. 
+To set a Supabase Secrets: 
+	- First use the command line ```supabase login```. A browser tab should pop up for the user to login. Login with your account.
+	- After logging in, run the command line ```supabase link``` and select your project.
+	- Now run the command line ```supabase secrets set SENTRY_DSN=[Your-Sentry-DSN]```. Sentry DSN can be found in [Project Name] --> Setting --> Client Keys (DSN) --> DSN in Sentry Dashboard.
+	- Run ```supabase secrets list``` to make sure the SENTRY_DSN is set in Supabase Secrets.
+4. Merge from branch ```develop``` to ```main```.
+5. Make sure that ```dbpush``` and ```deploy``` workflows run without any error.
+6. Define DATABASE_URL in .env in a local editor.
+7. In a local editor, run seed.ts by using command. ```deno run .\supabase\functions\common\seed.ts```
