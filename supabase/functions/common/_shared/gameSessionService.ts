@@ -186,7 +186,7 @@ export async function finishGame(
     const newLevel = level[0];
 
     const oldLevel = await getLevelByScore(playerTotalScore);
-    const isLevelUp: boolean = newLevel.level !== oldLevel.level;
+    const isLevelUp: boolean = newLevel.level !== oldLevel.level.level;
 
     await db.transaction(async (tx) => {
         await tx
