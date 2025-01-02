@@ -12,6 +12,24 @@ import {
 import { corsHeaders } from "../common/_shared/cors.ts";
 import { logger } from "../common/logger.ts";
 
+import * as Sentry from "https://deno.land/x/sentry@8.41.0-beta.1/index.mjs";
+
+Sentry.init({
+    // https://docs.sentry.io/product/sentry-basics/concepts/dsn-explainer/#where-to-find-your-dsn
+    dsn: Deno.env.get('SENTRY_DSN'),
+    debug: true,
+    defaultIntegrations: false,
+    // Performance Monitoring
+    tracesSampleRate: 1.0,
+    // Set sampling rate for profiling - this is relative to tracesSampleRate
+    // profilesSampleRate: 1.0,
+  })
+
+// Set region and execution_id as custom tags
+Sentry.setTag('region', Deno.env.get('SB_REGION') || 'unknown')
+Sentry.setTag('execution_id', Deno.env.get('SB_EXECUTION_ID') || 'unknown')
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -45,13 +63,18 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     logger.error("Error occurred while processing request", error);
+    Sentry.captureException(error)
 
     const response = {
-      message: error.message,
-    };
-    return new Response(JSON.stringify(response), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      message : error.message,
+    }
+    return new Response(
+      JSON.stringify(response),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      },
+    )
   }
 });
 
