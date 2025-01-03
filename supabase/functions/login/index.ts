@@ -3,9 +3,14 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { getFirebaseId, getPhoneNumber, login } from "../common/_shared/authService.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import {
+  getFirebaseId,
+  getPhoneNumber,
+  login,
+} from "../common/_shared/authService.ts";
 import { corsHeaders } from "../common/_shared/cors.ts";
+import { logger } from "../common/logger.ts";
 import * as Sentry from "https://deno.land/x/sentry@8.41.0-beta.1/index.mjs";
 
 Sentry.init({
@@ -26,31 +31,36 @@ Sentry.setTag('execution_id', Deno.env.get('SB_EXECUTION_ID') || 'unknown')
 console.log("Hello from Functions!")
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
-  try{
-    const { phoneNumber } = await req.json()
-    const authHeader = req.headers.get("Authorization")!
-    const firebaseId = getFirebaseId(authHeader)
+  try {
+    const { phoneNumber } = await req.json();
+    const authHeader = req.headers.get("Authorization")!;
+    const firebaseId = getFirebaseId(authHeader);
 
-    if(phoneNumber !== getPhoneNumber(authHeader)) {
-      throw new Error("Authentication Error")
+    if (phoneNumber !== getPhoneNumber(authHeader)) {
+      throw new Error("Authentication Error");
     }
-  
-    await login(firebaseId, phoneNumber)
+
+    await login(firebaseId, phoneNumber);
 
     const response = {
-      message : "Ok",
-      response : authHeader.replace("Bearer ","")
-    }
-    return new Response(
-      JSON.stringify(response),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    )
-  }
-  catch(error){
+      message: "Ok",
+      response: authHeader.replace("Bearer ", ""),
+    };
+
+    logger.info(
+      `API call to ${req.url} with method ${req.method}. Data modification performed. Request details: ${req.json()}`,
+    );
+
+    return new Response(JSON.stringify(response), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    logger.error("Error occurred while processing request", error);
+
     Sentry.captureException(error)
     const response = {
       message : error.message,
@@ -63,8 +73,7 @@ Deno.serve(async (req) => {
       },
     )
   }
-  
-})
+});
 
 /* To invoke locally:
 

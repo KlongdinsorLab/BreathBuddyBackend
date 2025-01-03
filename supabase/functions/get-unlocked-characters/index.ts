@@ -11,6 +11,7 @@ import { takeUniqueOrThrow } from "../common/_shared/takeUniqueOrThrow.ts";
 import { db } from "../common/db.ts";
 import { playersTable } from "../common/schema.ts";
 import { getUnlockedCharacters } from "../common/_shared/playerService.ts";
+import { logger } from "../common/logger.ts";
 import * as Sentry from "https://deno.land/x/sentry@8.41.0-beta.1/index.mjs";
 
 Sentry.init({
@@ -48,12 +49,19 @@ Deno.serve(async (req) => {
 
     const response = { message: "Ok", response: result };
 
+    logger.verbose(
+      `API call to ${req.url} with method GET. Data retrieval. Response Data: ${response}`,
+    );
+    logger.debug(`Player_${playerId} unlocked character: ${result}`);
+
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } 
   catch(error){
     Sentry.captureException(error)
+    logger.error("Error occurred while processing request", error);
+
     const response = {
       message : error.message,
     }

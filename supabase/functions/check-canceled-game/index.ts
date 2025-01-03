@@ -3,7 +3,7 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { corsHeaders } from "../common/_shared/cors.ts";
 import { getFirebaseId } from "../common/_shared/authService.ts";
 import { eq } from "npm:drizzle-orm@^0.31.4/expressions";
@@ -27,22 +27,25 @@ Sentry.init({
 // Set region and execution_id as custom tags
 Sentry.setTag('region', Deno.env.get('SB_REGION') || 'unknown')
 Sentry.setTag('execution_id', Deno.env.get('SB_EXECUTION_ID') || 'unknown')
-
-console.log("Hello from Functions!")
+import { logger } from "../common/logger.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
-  try{
-    const authHeader = req.headers.get("Authorization")!
-    const firebaseId = getFirebaseId(authHeader)
-    const player = await db.select().from(playersTable).where(eq(playersTable.firebase_id, firebaseId)).then(takeUniqueOrThrow)
-    const playerId = player.id
+  try {
+    const authHeader = req.headers.get("Authorization")!;
+    const firebaseId = getFirebaseId(authHeader);
+    const player = await db
+      .select()
+      .from(playersTable)
+      .where(eq(playersTable.firebase_id, firebaseId))
+      .then(takeUniqueOrThrow);
+    const playerId = player.id;
 
-    await checkCanceledGame(playerId)
+    await checkCanceledGame(playerId);
 
-    const response = {message : "OK"}
+    const response = { message: "OK" };
 
     return new Response(
       JSON.stringify(response),
@@ -51,6 +54,7 @@ Deno.serve(async (req) => {
   }
   catch(error){
     Sentry.captureException(error)
+    logger.error("Error occurred while processing request", error);
     const response = {
       message : error.message,
     }
@@ -62,8 +66,7 @@ Deno.serve(async (req) => {
       },
     )
   }
-
-})
+});
 
 /* To invoke locally:
 

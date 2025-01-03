@@ -3,14 +3,15 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { corsHeaders } from "../common/_shared/cors.ts"
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { corsHeaders } from "../common/_shared/cors.ts";
 import { getFirebaseId } from "../common/_shared/authService.ts";
 import { eq } from "npm:drizzle-orm@^0.31.4/expressions";
 import { takeUniqueOrThrow } from "../common/_shared/takeUniqueOrThrow.ts";
 import { db } from "../common/db.ts";
 import { playersTable } from "../common/schema.ts";
 import { getUnlockedAchievements } from "../common/_shared/achievementsService.ts";
+import { logger } from "../common/logger.ts";
 import * as Sentry from "https://deno.land/x/sentry@8.41.0-beta.1/index.mjs";
 
 Sentry.init({
@@ -31,28 +32,34 @@ Sentry.setTag('execution_id', Deno.env.get('SB_EXECUTION_ID') || 'unknown')
 console.log("Hello from Functions!")
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
-  try{
-    const authHeader = req.headers.get("Authorization")!
-    const firebaseId = getFirebaseId(authHeader)
-    const player = await db.select().from(playersTable).where(eq(playersTable.firebase_id, firebaseId)).then(takeUniqueOrThrow)
-    const playerId = player.id
+  try {
+    const authHeader = req.headers.get("Authorization")!;
+    const firebaseId = getFirebaseId(authHeader);
+    const player = await db
+      .select()
+      .from(playersTable)
+      .where(eq(playersTable.firebase_id, firebaseId))
+      .then(takeUniqueOrThrow);
+    const playerId = player.id;
 
-    const result = await getUnlockedAchievements(playerId)
-  
-    const response = {message : "Ok", 
-      response : result
-    }
+    const result = await getUnlockedAchievements(playerId);
 
-    return new Response(
-      JSON.stringify(response),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    )
-  }
-  catch(error){
-    Sentry.captureException(error)
+    const response = { message: "Ok", response: result };
+
+    logger.verbose(
+      `API call to ${req.url} with method GET. Data retrieval. Response Data: ${response}`,
+    );
+    logger.debug(`Player_${playerId} unlocked achievement: ${result}`);
+
+    return new Response(JSON.stringify(response), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    logger.error("Error occurred while processing request", error);
+
     const response = {
       message : error.message,
     }
@@ -64,7 +71,7 @@ Deno.serve(async (req) => {
       },
     )
   }
-})
+});
 
 /* To invoke locally:
 
