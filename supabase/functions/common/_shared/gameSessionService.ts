@@ -115,7 +115,7 @@ export async function checkPlayToday(playerId: number) {
 
   if (gamesPlayedToday.length >= 2) {
     const milliDiff = now.getTime() - gamesPlayedToday[1].started_at.getTime();
-    if (milliDiff < 7200000) { // 2 hours
+    if (milliDiff < 3600000) { // 1 hour
       throw new Error("Heart is not recharged.");
     }
   }
