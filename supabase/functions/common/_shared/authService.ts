@@ -59,11 +59,13 @@ export async function login(firebaseId: string, phoneNumber: string) {
     .where(eq(playersTable.phone_number, phoneNumber));
 
   if (players.length < 1) {
-    throw new Error("No existing player");
+    // No existing player
+    return false
   }
 
   if (players.length > 1) {
-    // TODO handle duplicate players
+    // Duplicate Player
+    throw new Error("Authentication Error")
   }
 
   const player = players[0];
