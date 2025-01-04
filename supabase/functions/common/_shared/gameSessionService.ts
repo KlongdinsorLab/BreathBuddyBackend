@@ -135,7 +135,6 @@ export async function cancelGame(playerId: number) {
       ),
     )
     .returning()
-    .then(takeUniqueOrThrow);
 
   logger.info(
     `Game session ${gameSession.id} cancel successfully`,
