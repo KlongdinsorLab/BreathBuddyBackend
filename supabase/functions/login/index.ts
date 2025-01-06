@@ -44,10 +44,19 @@ Deno.serve(async (req) => {
       throw new Error("Authentication Error");
     }
 
-    await login(firebaseId, phoneNumber);
+    const loginResult = await login(firebaseId, phoneNumber);
+
+    let responseMessage = '';
+
+    if(loginResult) {
+      responseMessage = 'Ok'
+    }
+    else {
+      responseMessage = 'No existing player'
+    }
 
     const response = {
-      message: "Ok",
+      message: responseMessage,
       response: authHeader.replace("Bearer ", ""),
     };
 
