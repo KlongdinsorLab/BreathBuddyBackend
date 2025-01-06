@@ -46,13 +46,10 @@ Deno.serve(async (req) => {
 
     const loginResult = await login(firebaseId, phoneNumber);
 
-    let responseMessage = '';
+    let responseMessage = "";
 
-    if(loginResult) {
-      responseMessage = 'Ok'
-    }
-    else {
-      responseMessage = 'No existing player'
+    if (loginResult) {
+      responseMessage = "Ok";
     }
 
     const response = {
