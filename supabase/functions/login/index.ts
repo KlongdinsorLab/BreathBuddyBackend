@@ -36,6 +36,7 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const loggedRequest = req.clone();
     const { phoneNumber } = await req.json();
     const authHeader = req.headers.get("Authorization")!;
     const firebaseId = getFirebaseId(authHeader);
@@ -58,7 +59,7 @@ Deno.serve(async (req) => {
     };
 
     logger.info(
-      `API call to ${req.url} with method ${req.method}. Data modification performed. Request details: ${req.json()}`,
+      `API call to ${loggedRequest.url} with method ${loggedRequest.method}. Data modification performed. Request details: ${loggedRequest.json()}`,
     );
 
     return new Response(JSON.stringify(response), {

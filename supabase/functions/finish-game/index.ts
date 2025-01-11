@@ -14,19 +14,19 @@ import { finishGame } from "../common/_shared/gameSessionService.ts";
 import * as Sentry from "https://deno.land/x/sentry@8.41.0-beta.1/index.mjs";
 
 Sentry.init({
-    // https://docs.sentry.io/product/sentry-basics/concepts/dsn-explainer/#where-to-find-your-dsn
-    dsn: Deno.env.get('SENTRY_DSN'),
-    debug: true,
-    defaultIntegrations: false,
-    // Performance Monitoring
-    tracesSampleRate: 1.0,
-    // Set sampling rate for profiling - this is relative to tracesSampleRate
-    // profilesSampleRate: 1.0,
-  })
+  // https://docs.sentry.io/product/sentry-basics/concepts/dsn-explainer/#where-to-find-your-dsn
+  dsn: Deno.env.get("SENTRY_DSN"),
+  debug: true,
+  defaultIntegrations: false,
+  // Performance Monitoring
+  tracesSampleRate: 1.0,
+  // Set sampling rate for profiling - this is relative to tracesSampleRate
+  // profilesSampleRate: 1.0,
+});
 
 // Set region and execution_id as custom tags
-Sentry.setTag('region', Deno.env.get('SB_REGION') || 'unknown')
-Sentry.setTag('execution_id', Deno.env.get('SB_EXECUTION_ID') || 'unknown')
+Sentry.setTag("region", Deno.env.get("SB_REGION") || "unknown");
+Sentry.setTag("execution_id", Deno.env.get("SB_EXECUTION_ID") || "unknown");
 import { logger } from "../common/logger.ts";
 
 Deno.serve(async (req) => {
@@ -34,6 +34,7 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
   try {
+    const loggedRequest = req.clone();
     const { score, lap, is_booster_received } = await req.json();
     const authHeader = req.headers.get("Authorization")!;
     const firebaseId = getFirebaseId(authHeader);
@@ -56,7 +57,7 @@ Deno.serve(async (req) => {
     const response = { message: "Ok", response: result };
 
     logger.info(
-      `API call to ${req.url} with method ${req.method}. Data modification performed. Request details: ${req.json()}`,
+      `API call to ${loggedRequest.url} with method ${loggedRequest.method}. Data modification performed. Request details: ${loggedRequest.json()}`,
     );
 
     return new Response(JSON.stringify(response), {
@@ -66,17 +67,17 @@ Deno.serve(async (req) => {
   } catch (error) {
     logger.error("Error occurred while processing request", error);
 
-    Sentry.captureException(error)
+    Sentry.captureException(error);
     const response = {
-      message : error.message,
-    }
+      message: error.message,
+    };
     return new Response(
       JSON.stringify(response),
-      { 
+      {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
-    )
+    );
   }
 });
 
