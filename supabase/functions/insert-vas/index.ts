@@ -14,23 +14,24 @@ import { logger } from "../common/logger.ts";
 import * as Sentry from "https://deno.land/x/sentry@8.41.0-beta.1/index.mjs";
 
 Sentry.init({
-    // https://docs.sentry.io/product/sentry-basics/concepts/dsn-explainer/#where-to-find-your-dsn
-    dsn: Deno.env.get('SENTRY_DSN'),
-    debug: true,
-    defaultIntegrations: false,
-    // Performance Monitoring
-    tracesSampleRate: 1.0,
-    // Set sampling rate for profiling - this is relative to tracesSampleRate
-    // profilesSampleRate: 1.0,
-  })
+  // https://docs.sentry.io/product/sentry-basics/concepts/dsn-explainer/#where-to-find-your-dsn
+  dsn: Deno.env.get("SENTRY_DSN"),
+  debug: true,
+  defaultIntegrations: false,
+  // Performance Monitoring
+  tracesSampleRate: 1.0,
+  // Set sampling rate for profiling - this is relative to tracesSampleRate
+  // profilesSampleRate: 1.0,
+});
 
 // Set region and execution_id as custom tags
-Sentry.setTag('region', Deno.env.get('SB_REGION') || 'unknown')
-Sentry.setTag('execution_id', Deno.env.get('SB_EXECUTION_ID') || 'unknown')
+Sentry.setTag("region", Deno.env.get("SB_REGION") || "unknown");
+Sentry.setTag("execution_id", Deno.env.get("SB_EXECUTION_ID") || "unknown");
 
-console.log("Hello from Functions!")
+console.log("Hello from Functions!");
 
 Deno.serve(async (req) => {
+  const loggedRequest = req.clone();
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -76,7 +77,7 @@ Deno.serve(async (req) => {
     const response = { message: "OK" };
 
     logger.info(
-      `API call to ${req.url} with method ${req.method}. Data modification performed. Request details: ${req.json()}`,
+      `API call to ${loggedRequest.url} with method ${loggedRequest.method}. Data modification performed. Request details: ${loggedRequest.json()}`,
     );
 
     return new Response(JSON.stringify(response), {
@@ -84,7 +85,7 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     logger.error("Error occurred while processing request", error);
-    Sentry.captureException(error)
+    Sentry.captureException(error);
 
     const response = { message: error.message };
 
