@@ -22,10 +22,9 @@ export async function register(
         // TODO consider again about ?? 1 part
         selected_character_id: 1,
         gender: gender === "M" ? "M" : gender === "F" ? "F" : null,
-        airflow:
-          airflow < 100 || airflow > 600 || airflow % 100 !== 0
-            ? null
-            : airflow,
+        airflow: airflow < 100 || airflow > 600 || airflow % 100 !== 0
+          ? null
+          : airflow,
 
         // TODO fix birth year
         birth_year: 2024 - age!,
@@ -59,13 +58,12 @@ export async function login(firebaseId: string, phoneNumber: string) {
     .where(eq(playersTable.phone_number, phoneNumber));
 
   if (players.length < 1) {
-    // No existing player
-    return false
+    throw new Error("No existing player");
   }
 
   if (players.length > 1) {
     // Duplicate Player
-    throw new Error("Authentication Error")
+    throw new Error("Authentication Error");
   }
 
   const player = players[0];
