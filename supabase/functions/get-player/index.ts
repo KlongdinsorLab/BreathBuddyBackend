@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
+  const loggedRequest = req.clone();
   try {
     const authHeader = req.headers.get("Authorization")!;
     const firebaseId = getFirebaseId(authHeader);
