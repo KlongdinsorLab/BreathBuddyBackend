@@ -136,9 +136,12 @@ export async function cancelGame(playerId: number) {
     )
     .returning()
 
-  logger.info(
-    `Game session ${gameSession.id} cancel successfully`,
-  );
+  if(gameSession.length > 0){
+    logger.info(
+      `Game session ${gameSession[0].id} cancel successfully`,
+    );
+  }
+  
 }
 
 export async function updateGame(playerId: number, score: number, lap: number) {
@@ -162,7 +165,7 @@ export async function updateGame(playerId: number, score: number, lap: number) {
   }
 
   logger.info(
-    `Game session ${updatedGame[updateGame.length - 1].id} update successfully`,
+    `Game session ${updatedGame[updatedGame.length - 1].id} update successfully`,
   );
 }
 
