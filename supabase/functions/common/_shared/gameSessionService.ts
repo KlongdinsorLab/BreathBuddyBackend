@@ -218,6 +218,10 @@ export async function finishGame(
     boosterDropId = game.booster_drop_id;
   });
 
+  let isHighScore : boolean = false
+  const highScore = await getHighScore(playerId)
+  if(score >= highScore) isHighScore = true
+
   const newAchievements = await getNewAchievements(playerId);
   const totalGames = await getTotalGames(playerId);
   const gamesPlayedToday = await getGamesPlayedToday(playerId);
@@ -282,6 +286,7 @@ export async function finishGame(
   });
 
   return {
+    is_high_score: isHighScore,
     new_achievements: newAchievements,
     total_games: totalGames,
     games_played_today: gamesPlayedToday,
@@ -289,6 +294,24 @@ export async function finishGame(
     level: newLevel,
     booster: isBoosterReceived ? boosterDropId : null,
   };
+}
+
+export async function getHighScore(playerId: number) {
+  const allGamesByScore = await db
+    .select()
+    .from(gameSessionsTable)
+    .where(and(
+      eq(gameSessionsTable.player_id, playerId),
+      eq(gameSessionsTable.status, "END")
+    ))
+    .orderBy(desc(gameSessionsTable.score))
+
+  if(allGamesByScore.length === 0) return 0
+
+  const highScoreGame = allGamesByScore[0]
+  const highScore = highScoreGame.score
+
+  return highScore
 }
 
 export async function getTotalGames(playerId: number) {
