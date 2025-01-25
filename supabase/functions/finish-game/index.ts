@@ -57,7 +57,9 @@ Deno.serve(async (req) => {
     const response = { message: "Ok", response: result };
 
     logger.info(
-      `API call to ${loggedRequest.url} with method ${loggedRequest.method}. Data modification performed. Request details: ${loggedRequest.json()}`,
+      `API call to ${loggedRequest.url} with method ${loggedRequest.method}. Data modification performed. Request details: ${
+        JSON.stringify(loggedRequest.json())
+      }`,
     );
 
     return new Response(JSON.stringify(response), {
@@ -68,6 +70,12 @@ Deno.serve(async (req) => {
     logger.error("Error occurred while processing request", error);
 
     Sentry.captureException(error);
+    Sentry.setContext("http", {
+      method: req.method,
+      url: req.url,
+      headers: Object.fromEntries(req.headers.entries()),
+    });
+
     const response = {
       message: error.message,
     };
