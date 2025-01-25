@@ -134,14 +134,13 @@ export async function cancelGame(playerId: number) {
         eq(gameSessionsTable.player_id, playerId),
       ),
     )
-    .returning()
+    .returning();
 
-  if(gameSession.length > 0){
+  if (gameSession.length > 0) {
     logger.info(
       `Game session ${gameSession[0].id} cancel successfully`,
     );
   }
-  
 }
 
 export async function updateGame(playerId: number, score: number, lap: number) {
@@ -165,7 +164,9 @@ export async function updateGame(playerId: number, score: number, lap: number) {
   }
 
   logger.info(
-    `Game session ${updatedGame[updatedGame.length - 1].id} update successfully`,
+    `Game session ${
+      updatedGame[updatedGame.length - 1].id
+    } update successfully`,
   );
 }
 
@@ -218,11 +219,10 @@ export async function finishGame(
     boosterDropId = game.booster_drop_id;
   });
 
-  let isHighScore : boolean = false
-  const highScore = await getHighScore(playerId)
-  if(score >= highScore) isHighScore = true
+  let isHighScore: boolean = false;
+  const highScore = await getHighScore(playerId);
+  if (score >= highScore) isHighScore = true;
 
-  const newAchievements = await getNewAchievements(playerId);
   const totalGames = await getTotalGames(playerId);
   const gamesPlayedToday = await getGamesPlayedToday(playerId);
 
@@ -285,6 +285,8 @@ export async function finishGame(
     logger.debug("Update booster from level up successfully");
   });
 
+  const newAchievements = await getNewAchievements(playerId);
+
   return {
     is_high_score: isHighScore,
     new_achievements: newAchievements,
@@ -302,16 +304,16 @@ export async function getHighScore(playerId: number) {
     .from(gameSessionsTable)
     .where(and(
       eq(gameSessionsTable.player_id, playerId),
-      eq(gameSessionsTable.status, "END")
+      eq(gameSessionsTable.status, "END"),
     ))
-    .orderBy(desc(gameSessionsTable.score))
+    .orderBy(desc(gameSessionsTable.score));
 
-  if(allGamesByScore.length === 0) return 0
+  if (allGamesByScore.length === 0) return 0;
 
-  const highScoreGame = allGamesByScore[0]
-  const highScore = highScoreGame.score
+  const highScoreGame = allGamesByScore[0];
+  const highScore = highScoreGame.score;
 
-  return highScore
+  return highScore ?? 0;
 }
 
 export async function getTotalGames(playerId: number) {
@@ -445,17 +447,17 @@ export async function checkCanceledGame(playerId: number) {
     const level = await db
       .select()
       .from(levelsTable)
-      .where(lte(levelsTable.score_required, playerTotalScore + score))
+      .where(lte(levelsTable.score_required, playerTotalScore + (score ?? 0)))
       .orderBy(desc(levelsTable.score_required));
     logger.debug(`Game Session Service : ${level[0]}`);
     const newLevel = level[0];
 
     const oldLevel = await getLevelByScore(playerTotalScore);
-    const isLevelUp: boolean = newLevel.level !== oldLevel.level;
+    const isLevelUp: boolean = newLevel.level !== oldLevel.level.level;
 
     await tx
       .update(playersTable)
-      .set({ total_score: playerTotalScore + score })
+      .set({ total_score: playerTotalScore + (score ?? 0) })
       .where(eq(playersTable.id, playerId))
       .returning()
       .then(takeUniqueOrThrow);
