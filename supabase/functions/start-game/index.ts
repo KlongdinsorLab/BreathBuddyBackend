@@ -53,7 +53,9 @@ Deno.serve(async (req) => {
     const response = { message: "Ok", response: result };
 
     logger.info(
-      `API call to ${loggedRequest.url} with method ${loggedRequest.method}. Data modification performed. Request details: ${loggedRequest.json()}`,
+      `API call to ${loggedRequest.url} with method ${loggedRequest.method}. Data modification performed. Request details: ${
+        JSON.stringify(loggedRequest.json())
+      }`,
     );
 
     return new Response(JSON.stringify(response), {
