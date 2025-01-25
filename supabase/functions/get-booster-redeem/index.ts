@@ -52,9 +52,7 @@ Deno.serve(async (req) => {
     const response = { message: "Ok", response: result };
 
     logger.verbose(
-      `API call to ${loggedRequest.url} with method GET. Data retrieval. Response Data: ${
-        JSON.stringify(response)
-      }`,
+      `API call to ${loggedRequest.url} with method GET. Data retrieval. Response Data: ${response}`,
     );
     logger.debug(`Player_${playerId} booster redeem: ${result}`);
 
