@@ -62,12 +62,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     Sentry.captureException(error);
-    Sentry.setContext("http", {
-      method: req.method,
-      url: req.url,
-      headers: Object.fromEntries(req.headers.entries()),
-    });
-
     logger.error("Error occurred while processing request", error);
 
     const response = {
