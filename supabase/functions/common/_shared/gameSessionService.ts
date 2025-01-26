@@ -80,6 +80,20 @@ export async function startGame(playerId: number, boosterId?: number) {
       score: 0,
       lap: 1,
       status: "ACTIVE",
+    }).onConflictDoUpdate({
+      target: gameSessionsTable.id,
+      set: {
+        player_id: playerId,
+        difficulty_id: currentDifficultyId,
+        boss_id: bossId,
+        booster_drop_id: boosterDrop.id,
+        booster_drop_duration: boosterDrop.duration === 0
+          ? null
+          : boosterDrop.duration,
+        score: 0,
+        lap: 1,
+        status: "ACTIVE",
+      },
     })
       .returning()
       .then(takeUniqueOrThrow);
