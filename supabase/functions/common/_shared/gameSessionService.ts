@@ -93,6 +93,7 @@ export async function startGame(playerId: number, boosterId?: number) {
         score: 0,
         lap: 1,
         status: "ACTIVE",
+        started_at: new Date(),
       },
     })
       .returning()
