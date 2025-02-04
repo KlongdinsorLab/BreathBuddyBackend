@@ -77,7 +77,7 @@ https://supabase.com/docs/guides/cli/local-development
         - This can be found in [Project Name] --> Project Settings --> Configuration --> Database --> Database Password in Supabase Dashboard
    - SUPABASE_PROJECT_ID_PROD
         - To retrieve Project ID, go to dashboard of the Supabase Project. The project ID should be in the URL. (https://supabase.com/dashboard/project/[YOUR-PROJECT-ID])
-   - DATABASE_URL_PROD
+   - DATABASE_URL
         - This can be found in [Project Name] --> Project Settings --> Configuration --> Database --> Connection String --> URI in Supabase Dashboard. Replace [YOUR-PASSWORD] with the actual db password.
 
 2. Define SENTRY_DSN in Supabase Secrets. 
@@ -86,6 +86,7 @@ To set a Supabase Secrets:
 	- After logging in, run the command line ```supabase link``` and select your project.
 	- Now run the command line ```supabase secrets set SENTRY_DSN=[Your-Sentry-DSN]```. Sentry DSN can be found in [Project Name] --> Setting --> Client Keys (DSN) --> DSN in Sentry Dashboard.
 	- Run ```supabase secrets list``` to make sure the SENTRY_DSN is set in Supabase Secrets.
+3. Run ```supabase secrets set DATABASE_URL=[Your-Database-URL]```. Replace [Your-Database_URL] with the retrieved database URL.
 4. Merge from branch ```develop``` to ```main```.
 5. Make sure that ```dbpush``` and ```deploy``` workflows run without any error.
 6. Define DATABASE_URL in .env in a local editor.
